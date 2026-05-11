@@ -12,52 +12,36 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #0f0f0f;
-    --bg2: #1a1a1a;
-    --bg3: #242424;
-    --border: rgba(255,255,255,0.08);
-    --border2: rgba(255,255,255,0.15);
-    --text: #f0f0f0;
-    --text2: #888;
-    --text3: #555;
-    --accent: #e8ff47;
-    --accent2: #b8cc2e;
-    --danger: #ff4d4d;
-    --radius: 12px;
-    --radius-sm: 8px;
-    --font-display: 'Syne', sans-serif;
-    --font-mono: 'DM Mono', monospace;
+    --bg: #0f0f0f; --bg2: #1a1a1a; --bg3: #242424;
+    --border: rgba(255,255,255,0.08); --border2: rgba(255,255,255,0.15);
+    --text: #f0f0f0; --text2: #888; --text3: #555;
+    --accent: #e8ff47; --accent2: #b8cc2e; --danger: #ff4d4d;
+    --radius: 12px; --radius-sm: 8px;
+    --font-display: 'Syne', sans-serif; --font-mono: 'DM Mono', monospace;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-  html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--font-display); }
-  body { display: flex; flex-direction: column; min-height: 100vh; padding-bottom: env(safe-area-inset-bottom); }
+  html, body { background: var(--bg); color: var(--text); font-family: var(--font-display); }
+  body { min-height: 100vh; padding-bottom: calc(20px + env(safe-area-inset-bottom)); }
 
-  header { padding: 20px 20px 0; padding-top: calc(20px + env(safe-area-inset-top)); }
+  header { padding: calc(20px + env(safe-area-inset-top)) 20px 0; }
   .header-inner { display: flex; justify-content: space-between; align-items: flex-start; }
   .app-title { font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text3); font-family: var(--font-mono); }
-  .car-label { font-size: 22px; font-weight: 700; color: var(--text); margin-top: 2px; }
+  .car-label { font-size: 22px; font-weight: 700; margin-top: 2px; }
   .accent-dot { color: var(--accent); }
 
   .stats-bar { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; padding: 20px; }
   .stat-card { background: var(--bg2); border: 0.5px solid var(--border); border-radius: var(--radius-sm); padding: 14px 12px; }
   .stat-label { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text3); font-family: var(--font-mono); margin-bottom: 6px; }
-  .stat-value { font-size: 20px; font-weight: 600; color: var(--text); line-height: 1; }
+  .stat-value { font-size: 20px; font-weight: 600; line-height: 1; }
   .stat-value.accent { color: var(--accent); }
   .stat-unit { font-size: 11px; color: var(--text2); font-family: var(--font-mono); margin-top: 2px; }
 
   .section { padding: 0 20px 20px; }
-  .card { background: var(--bg2); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 18px; }
-  .card + .card { margin-top: 12px; }
+  .card { background: var(--bg2); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 18px; margin-bottom: 12px; }
   .card-title { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text3); font-family: var(--font-mono); margin-bottom: 16px; }
 
   .mode-toggle { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 16px; }
-  .mode-btn {
-    background: var(--bg3); border: 0.5px solid var(--border2);
-    border-radius: var(--radius-sm); color: var(--text2);
-    font-family: var(--font-mono); font-size: 12px;
-    padding: 10px; cursor: pointer; text-align: center;
-    transition: all 0.15s; -webkit-appearance: none;
-  }
+  .mode-btn { background: var(--bg3); border: 0.5px solid var(--border2); border-radius: var(--radius-sm); color: var(--text2); font-family: var(--font-mono); font-size: 12px; padding: 10px; cursor: pointer; text-align: center; transition: all 0.15s; -webkit-appearance: none; }
   .mode-btn.active { background: var(--accent); color: #0f0f0f; border-color: var(--accent); font-weight: 500; }
 
   .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
@@ -66,14 +50,12 @@
   label { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text3); font-family: var(--font-mono); }
 
   input[type="date"], input[type="number"], select {
-    background: var(--bg3); border: 0.5px solid var(--border2);
-    border-radius: var(--radius-sm); color: var(--text);
-    font-family: var(--font-mono); font-size: 15px;
-    padding: 11px 12px; width: 100%;
-    -webkit-appearance: none; appearance: none; outline: none;
+    background: var(--bg3); border: 0.5px solid var(--border2); border-radius: var(--radius-sm);
+    color: var(--text); font-family: var(--font-mono); font-size: 15px;
+    padding: 11px 12px; width: 100%; -webkit-appearance: none; appearance: none; outline: none;
     transition: border-color 0.15s;
   }
-  input[type="date"]:focus, input[type="number"]:focus, select:focus { border-color: var(--accent); }
+  input:focus, select:focus { border-color: var(--accent); }
   input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1) opacity(0.4); }
   select option { background: var(--bg3); }
 
@@ -81,37 +63,26 @@
   .loss-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
   .loss-label { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text3); font-family: var(--font-mono); }
   .loss-value { font-size: 15px; font-weight: 500; color: var(--accent); font-family: var(--font-mono); }
-  input[type="range"] { -webkit-appearance: none; appearance: none; width: 100%; height: 3px; background: var(--border2); border-radius: 2px; outline: none; }
+  input[type="range"] { -webkit-appearance: none; width: 100%; height: 3px; background: var(--border2); border-radius: 2px; outline: none; }
   input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px; border-radius: 50%; background: var(--accent); cursor: pointer; box-shadow: 0 0 0 3px rgba(232,255,71,0.15); }
   .range-hints { display: flex; justify-content: space-between; margin-top: 6px; font-size: 10px; color: var(--text3); font-family: var(--font-mono); }
 
-  .preview-box {
-    background: var(--bg3); border-left: 2px solid var(--accent);
-    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-    padding: 10px 14px; margin-bottom: 14px;
-    font-family: var(--font-mono); font-size: 13px;
-    color: var(--text2); min-height: 40px;
-    display: flex; align-items: center;
-  }
+  .preview-box { background: var(--bg3); border-left: 2px solid var(--accent); border-radius: 0 var(--radius-sm) var(--radius-sm) 0; padding: 10px 14px; margin-bottom: 14px; font-family: var(--font-mono); font-size: 13px; color: var(--text2); min-height: 40px; display: flex; align-items: center; }
   .preview-box.active { color: var(--text); }
   .preview-kwh { color: var(--accent); font-weight: 500; }
 
-  .btn {
-    width: 100%; padding: 14px;
-    background: var(--accent); color: #0f0f0f;
-    border: none; border-radius: var(--radius-sm);
-    font-family: var(--font-display); font-size: 14px; font-weight: 600;
-    letter-spacing: 0.05em; cursor: pointer;
-    transition: background 0.15s, transform 0.1s; -webkit-appearance: none;
-  }
+  .btn { width: 100%; padding: 14px; background: var(--accent); color: #0f0f0f; border: none; border-radius: var(--radius-sm); font-family: var(--font-display); font-size: 14px; font-weight: 600; letter-spacing: 0.05em; cursor: pointer; transition: background 0.15s, transform 0.1s; -webkit-appearance: none; }
   .btn:active { background: var(--accent2); transform: scale(0.98); }
-  .btn-ghost {
-    background: transparent; color: var(--text2);
-    border: 0.5px solid var(--border2); font-size: 12px;
-    padding: 8px 14px; width: auto; border-radius: var(--radius-sm);
-    font-family: var(--font-mono); cursor: pointer; -webkit-appearance: none;
-  }
+  .btn-ghost { background: transparent; color: var(--text2); border: 0.5px solid var(--border2); font-size: 12px; padding: 8px 14px; width: auto; border-radius: var(--radius-sm); font-family: var(--font-mono); cursor: pointer; -webkit-appearance: none; transition: color 0.15s, border-color 0.15s; }
+  .btn-ghost:active { color: var(--text); }
+  .btn-danger { background: transparent; color: var(--danger); border: 0.5px solid var(--danger); font-size: 12px; padding: 8px 14px; width: auto; border-radius: var(--radius-sm); font-family: var(--font-mono); cursor: pointer; -webkit-appearance: none; }
 
+  /* iCloud sync bar */
+  .sync-bar { display: flex; gap: 8px; margin-bottom: 12px; }
+  .sync-bar .btn-ghost { flex: 1; text-align: center; padding: 10px 8px; font-size: 11px; }
+  .sync-bar .btn-ghost.export { border-color: var(--accent); color: var(--accent); }
+
+  .history-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
   .session-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 0.5px solid var(--border); gap: 8px; }
   .session-item:last-child { border-bottom: none; padding-bottom: 0; }
   .session-left { flex: 1; min-width: 0; }
@@ -119,20 +90,24 @@
   .session-soc { font-size: 14px; color: var(--text); margin: 2px 0; }
   .session-meta { font-size: 11px; color: var(--text3); font-family: var(--font-mono); }
   .session-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
-  .session-kwh { font-size: 15px; font-weight: 500; font-family: var(--font-mono); color: var(--text); }
+  .session-kwh { font-size: 15px; font-weight: 500; font-family: var(--font-mono); }
   .session-cost { font-size: 13px; font-family: var(--font-mono); color: var(--accent); }
   .btn-del { background: transparent; border: 0.5px solid var(--border); border-radius: 6px; color: var(--text3); font-size: 14px; padding: 4px 8px; cursor: pointer; -webkit-appearance: none; }
   .btn-del:active { color: var(--danger); border-color: var(--danger); }
 
   .empty-state { text-align: center; padding: 32px 0; color: var(--text3); font-size: 13px; font-family: var(--font-mono); }
 
+  .install-banner { margin: 0 20px 12px; background: var(--bg2); border: 0.5px solid var(--accent); border-radius: var(--radius-sm); padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+  .install-text { font-size: 12px; color: var(--text2); font-family: var(--font-mono); line-height: 1.5; }
+  .install-text strong { color: var(--accent); }
+
   .toast { position: fixed; bottom: calc(24px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%) translateY(20px); background: var(--accent); color: #0f0f0f; font-family: var(--font-mono); font-size: 12px; font-weight: 500; padding: 10px 20px; border-radius: 100px; opacity: 0; transition: opacity 0.2s, transform 0.2s; pointer-events: none; white-space: nowrap; z-index: 100; }
   .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-  .install-banner { margin: 0 20px 16px; background: var(--bg2); border: 0.5px solid var(--accent); border-radius: var(--radius-sm); padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
-  .install-text { font-size: 12px; color: var(--text2); font-family: var(--font-mono); line-height: 1.5; }
-  .install-text strong { color: var(--accent); }
   .hidden { display: none !important; }
+
+  /* file input hidden */
+  #file-import { display: none; }
 </style>
 </head>
 <body>
@@ -143,7 +118,6 @@
       <div class="app-title">Ladetagebuch</div>
       <div class="car-label">CUPRA Leon<span class="accent-dot">.</span></div>
     </div>
-    <button class="btn-ghost" onclick="exportCSV()">Export CSV</button>
   </div>
 </header>
 
@@ -167,7 +141,16 @@
 
 <div id="install-banner" class="install-banner hidden">
   <div class="install-text"><strong>Als App installieren:</strong><br>Safari → Teilen → "Zum Home-Bildschirm"</div>
-  <button class="btn-ghost" onclick="document.getElementById('install-banner').classList.add('hidden')">✕</button>
+  <button class="btn-ghost" onclick="this.closest('.install-banner').classList.add('hidden')">✕</button>
+</div>
+
+<!-- iCloud Sync Bar -->
+<div class="section" style="padding-bottom:0;">
+  <div class="sync-bar">
+    <button class="btn-ghost export" onclick="exportToiCloud()">☁️ In iCloud sichern</button>
+    <button class="btn-ghost" onclick="document.getElementById('file-import').click()">📂 Aus iCloud laden</button>
+  </div>
+  <input type="file" id="file-import" accept=".json" onchange="importFromFile(event)" />
 </div>
 
 <div class="section">
@@ -225,15 +208,15 @@
     </div>
 
     <div class="preview-box" id="preview">Werte eingeben für Vorschau …</div>
-
     <button class="btn" onclick="addSession()">+ Ladung speichern</button>
   </div>
 </div>
 
 <div class="section">
   <div class="card">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+    <div class="history-header">
       <div class="card-title" style="margin-bottom:0;">Ladehistorie</div>
+      <button class="btn-ghost" onclick="exportCSV()" style="font-size:11px;">CSV Export</button>
     </div>
     <div id="sessions-list"><div class="empty-state">Noch keine Ladungen eingetragen.</div></div>
   </div>
@@ -263,8 +246,7 @@ function setMode(mode) {
   document.getElementById('soc-inputs').classList.toggle('hidden', mode !== 'soc');
   document.getElementById('kwh-inputs').classList.toggle('hidden', mode !== 'kwh');
   document.getElementById('group-power').classList.toggle('hidden', mode !== 'soc');
-  document.getElementById('preview').textContent = 'Werte eingeben für Vorschau …';
-  document.getElementById('preview').classList.remove('active');
+  resetPreview();
 }
 
 function getLoss() { return parseInt(document.getElementById('loss-slider').value); }
@@ -292,20 +274,22 @@ function updatePreview() {
     const e = parseFloat(document.getElementById('soc-end').value);
     if (!isNaN(s) && !isNaN(e) && e > s && s >= 0 && e <= 100) {
       const kwh = calcKwh(s, e, getLoss());
-      box.innerHTML = '<span class="preview-kwh">' + kwh.toFixed(2) + ' kWh</span>&nbsp;·&nbsp;' + (kwh * PRICE).toFixed(2) + ' €&nbsp;·&nbsp;Verlust ' + getLoss() + '%';
+      box.innerHTML = '<span class="preview-kwh">' + kwh.toFixed(2) + ' kWh</span>&nbsp;·&nbsp;' + (kwh * PRICE).toFixed(2) + ' €&nbsp;·&nbsp;' + getLoss() + '% Verlust';
       box.classList.add('active');
-    } else {
-      box.textContent = 'Werte eingeben für Vorschau …'; box.classList.remove('active');
-    }
+    } else resetPreview();
   } else {
     const k = parseFloat(document.getElementById('kwh-direct').value);
     if (!isNaN(k) && k > 0) {
       box.innerHTML = '<span class="preview-kwh">' + k.toFixed(2) + ' kWh</span>&nbsp;·&nbsp;' + (k * PRICE).toFixed(2) + ' €';
       box.classList.add('active');
-    } else {
-      box.textContent = 'Werte eingeben für Vorschau …'; box.classList.remove('active');
-    }
+    } else resetPreview();
   }
+}
+
+function resetPreview() {
+  const box = document.getElementById('preview');
+  box.textContent = 'Werte eingeben für Vorschau …';
+  box.classList.remove('active');
 }
 
 function addSession() {
@@ -335,8 +319,7 @@ function addSession() {
   sessions.unshift({ id: Date.now(), date, kwh, label, meta });
   save();
   renderAll();
-  document.getElementById('preview').textContent = 'Werte eingeben für Vorschau …';
-  document.getElementById('preview').classList.remove('active');
+  resetPreview();
   showToast('Ladung gespeichert ✓');
 }
 
@@ -352,6 +335,7 @@ function renderAll() {
   document.getElementById('stat-kwh').textContent = totalKwh.toFixed(2);
   document.getElementById('stat-cost').textContent = (totalKwh * PRICE).toFixed(2);
   document.getElementById('stat-count').textContent = sessions.length;
+
   const list = document.getElementById('sessions-list');
   if (sessions.length === 0) { list.innerHTML = '<div class="empty-state">Noch keine Ladungen eingetragen.</div>'; return; }
   list.innerHTML = sessions.map(s => `
@@ -366,24 +350,104 @@ function renderAll() {
           <div class="session-kwh">${s.kwh.toFixed(2)} kWh</div>
           <div class="session-cost">${(s.kwh * PRICE).toFixed(2)} €</div>
         </div>
-        <button class="btn-del" onclick="removeSession(${s.id})" aria-label="Löschen">✕</button>
+        <button class="btn-del" onclick="removeSession(${s.id})">✕</button>
       </div>
     </div>
   `).join('');
 }
 
+// ─── iCloud Export ────────────────────────────────────────
+
+function exportToiCloud() {
+  const data = { eintraege: sessions, exportiert: new Date().toISOString(), version: 1 };
+  const json = JSON.stringify(data, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const url  = URL.createObjectURL(blob);
+
+  // iOS Share Sheet via Web Share API
+  if (navigator.share) {
+    // Datei über Share Sheet teilen → "In Dateien sichern" → iCloud Drive
+    const file = new File([blob], 'ladetagebuch.json', { type: 'application/json' });
+    navigator.share({
+      files: [file],
+      title: 'Ladetagebuch CUPRA Leon',
+    }).then(() => {
+      showToast('Gespeichert ✓');
+    }).catch(() => {
+      // Fallback: direkter Download
+      triggerDownload(url);
+    });
+  } else {
+    // Desktop: direkter Download
+    triggerDownload(url);
+    showToast('JSON heruntergeladen ✓');
+  }
+  URL.revokeObjectURL(url);
+}
+
+function triggerDownload(url) {
+  const a = document.createElement('a');
+  a.href = url; a.download = 'ladetagebuch.json'; a.click();
+}
+
+// ─── iCloud Import ────────────────────────────────────────
+
+function importFromFile(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const data = JSON.parse(e.target.result);
+      // Unterstützt beide Formate: Array direkt oder {eintraege: [...]}
+      const eintraege = Array.isArray(data) ? data : (data.eintraege || []);
+      if (!Array.isArray(eintraege)) throw new Error('Ungültiges Format');
+
+      const confirm = window.confirm(
+        eintraege.length + ' Einträge gefunden.\n\nVorhandene Daten ersetzen oder zusammenführen?\n\nOK = Ersetzen\nAbbrechen = Zusammenführen'
+      );
+
+      if (confirm) {
+        sessions = eintraege;
+      } else {
+        // Merge: bestehende IDs nicht doppelt
+        const existingIds = new Set(sessions.map(s => s.id));
+        const neu = eintraege.filter(s => !existingIds.has(s.id));
+        sessions = [...sessions, ...neu].sort((a, b) => b.id - a.id);
+      }
+
+      save();
+      renderAll();
+      showToast(eintraege.length + ' Einträge geladen ✓');
+    } catch(err) {
+      alert('Fehler beim Laden: Ungültige JSON-Datei');
+    }
+  };
+  reader.readAsText(file);
+  // Input zurücksetzen damit dieselbe Datei nochmal geladen werden kann
+  event.target.value = '';
+}
+
+// ─── CSV Export ───────────────────────────────────────────
+
 function exportCSV() {
-  if (sessions.length === 0) { showToast('Keine Daten zum Exportieren'); return; }
+  if (sessions.length === 0) { showToast('Keine Daten'); return; }
   const totalKwh = sessions.reduce((a, s) => a + s.kwh, 0);
   let csv = 'Datum,Beschreibung,Details,kWh,Kosten EUR\n';
   sessions.forEach(s => { csv += `${s.date},"${s.label}","${s.meta}",${s.kwh.toFixed(3)},${(s.kwh * PRICE).toFixed(2)}\n`; });
   csv += `\nGesamt,,,${totalKwh.toFixed(3)},${(totalKwh * PRICE).toFixed(2)}\n`;
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a'); a.href = url; a.download = 'ladetagebuch_cupra.csv'; a.click();
+  const url  = URL.createObjectURL(blob);
+  if (navigator.share) {
+    const file = new File([blob], 'ladetagebuch.csv', { type: 'text/csv' });
+    navigator.share({ files: [file], title: 'Ladetagebuch CSV' }).catch(() => triggerDownload(url));
+  } else {
+    const a = document.createElement('a'); a.href = url; a.download = 'ladetagebuch.csv'; a.click();
+  }
   URL.revokeObjectURL(url);
-  showToast('CSV exportiert ✓');
 }
+
+// ─── Helpers ──────────────────────────────────────────────
 
 function today() { return new Date().toISOString().split('T')[0]; }
 
@@ -392,12 +456,14 @@ function showToast(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg; t.classList.add('show');
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.classList.remove('show'), 2000);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
 }
 
 function checkInstallBanner() {
   const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
-  if (isIOS && !window.navigator.standalone) document.getElementById('install-banner').classList.remove('hidden');
+  if (isIOS && !window.navigator.standalone) {
+    document.getElementById('install-banner').classList.remove('hidden');
+  }
 }
 
 load(); renderAll();
