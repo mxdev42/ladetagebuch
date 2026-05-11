@@ -30,41 +30,35 @@
   }
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
   html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--font-display); }
-
   body { display: flex; flex-direction: column; min-height: 100vh; padding-bottom: env(safe-area-inset-bottom); }
 
-  header {
-    padding: 20px 20px 0;
-    padding-top: calc(20px + env(safe-area-inset-top));
-  }
-  .header-inner {
-    display: flex; justify-content: space-between; align-items: flex-start;
-  }
+  header { padding: 20px 20px 0; padding-top: calc(20px + env(safe-area-inset-top)); }
+  .header-inner { display: flex; justify-content: space-between; align-items: flex-start; }
   .app-title { font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text3); font-family: var(--font-mono); }
   .car-label { font-size: 22px; font-weight: 700; color: var(--text); margin-top: 2px; }
   .accent-dot { color: var(--accent); }
 
-  .stats-bar {
-    display: grid; grid-template-columns: 1fr 1fr 1fr;
-    gap: 10px; padding: 20px;
-  }
-  .stat-card {
-    background: var(--bg2); border: 0.5px solid var(--border);
-    border-radius: var(--radius-sm); padding: 14px 12px;
-  }
+  .stats-bar { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; padding: 20px; }
+  .stat-card { background: var(--bg2); border: 0.5px solid var(--border); border-radius: var(--radius-sm); padding: 14px 12px; }
   .stat-label { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text3); font-family: var(--font-mono); margin-bottom: 6px; }
   .stat-value { font-size: 20px; font-weight: 600; color: var(--text); line-height: 1; }
   .stat-value.accent { color: var(--accent); }
   .stat-unit { font-size: 11px; color: var(--text2); font-family: var(--font-mono); margin-top: 2px; }
 
   .section { padding: 0 20px 20px; }
-
-  .card {
-    background: var(--bg2); border: 0.5px solid var(--border);
-    border-radius: var(--radius); padding: 18px;
-  }
+  .card { background: var(--bg2); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 18px; }
   .card + .card { margin-top: 12px; }
   .card-title { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text3); font-family: var(--font-mono); margin-bottom: 16px; }
+
+  .mode-toggle { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 16px; }
+  .mode-btn {
+    background: var(--bg3); border: 0.5px solid var(--border2);
+    border-radius: var(--radius-sm); color: var(--text2);
+    font-family: var(--font-mono); font-size: 12px;
+    padding: 10px; cursor: pointer; text-align: center;
+    transition: all 0.15s; -webkit-appearance: none;
+  }
+  .mode-btn.active { background: var(--accent); color: #0f0f0f; border-color: var(--accent); font-weight: 500; }
 
   .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
   .form-group { display: flex; flex-direction: column; gap: 6px; }
@@ -76,34 +70,19 @@
     border-radius: var(--radius-sm); color: var(--text);
     font-family: var(--font-mono); font-size: 15px;
     padding: 11px 12px; width: 100%;
-    -webkit-appearance: none; appearance: none;
-    outline: none;
+    -webkit-appearance: none; appearance: none; outline: none;
     transition: border-color 0.15s;
   }
-  input[type="date"]:focus, input[type="number"]:focus, select:focus {
-    border-color: var(--accent);
-  }
+  input[type="date"]:focus, input[type="number"]:focus, select:focus { border-color: var(--accent); }
   input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1) opacity(0.4); }
   select option { background: var(--bg3); }
 
-  .loss-row {
-    background: var(--bg3); border-radius: var(--radius-sm);
-    padding: 12px 14px; margin-bottom: 12px;
-  }
+  .loss-row { background: var(--bg3); border-radius: var(--radius-sm); padding: 12px 14px; margin-bottom: 12px; }
   .loss-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
   .loss-label { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text3); font-family: var(--font-mono); }
   .loss-value { font-size: 15px; font-weight: 500; color: var(--accent); font-family: var(--font-mono); }
-  input[type="range"] {
-    -webkit-appearance: none; appearance: none;
-    width: 100%; height: 3px; background: var(--border2);
-    border-radius: 2px; outline: none;
-  }
-  input[type="range"]::-webkit-slider-thumb {
-    -webkit-appearance: none; appearance: none;
-    width: 20px; height: 20px; border-radius: 50%;
-    background: var(--accent); cursor: pointer;
-    box-shadow: 0 0 0 3px rgba(232,255,71,0.15);
-  }
+  input[type="range"] { -webkit-appearance: none; appearance: none; width: 100%; height: 3px; background: var(--border2); border-radius: 2px; outline: none; }
+  input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px; border-radius: 50%; background: var(--accent); cursor: pointer; box-shadow: 0 0 0 3px rgba(232,255,71,0.15); }
   .range-hints { display: flex; justify-content: space-between; margin-top: 6px; font-size: 10px; color: var(--text3); font-family: var(--font-mono); }
 
   .preview-box {
@@ -113,7 +92,6 @@
     font-family: var(--font-mono); font-size: 13px;
     color: var(--text2); min-height: 40px;
     display: flex; align-items: center;
-    transition: opacity 0.2s;
   }
   .preview-box.active { color: var(--text); }
   .preview-kwh { color: var(--accent); font-weight: 500; }
@@ -124,27 +102,17 @@
     border: none; border-radius: var(--radius-sm);
     font-family: var(--font-display); font-size: 14px; font-weight: 600;
     letter-spacing: 0.05em; cursor: pointer;
-    transition: background 0.15s, transform 0.1s;
-    -webkit-appearance: none;
+    transition: background 0.15s, transform 0.1s; -webkit-appearance: none;
   }
   .btn:active { background: var(--accent2); transform: scale(0.98); }
   .btn-ghost {
     background: transparent; color: var(--text2);
-    border: 0.5px solid var(--border2);
-    font-size: 12px; padding: 8px 14px; width: auto;
-    border-radius: var(--radius-sm);
-    font-family: var(--font-mono);
-    cursor: pointer; transition: border-color 0.15s, color 0.15s;
+    border: 0.5px solid var(--border2); font-size: 12px;
+    padding: 8px 14px; width: auto; border-radius: var(--radius-sm);
+    font-family: var(--font-mono); cursor: pointer; -webkit-appearance: none;
   }
-  .btn-ghost:active { color: var(--text); border-color: var(--border2); }
 
-  .history-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
-
-  .session-item {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 12px 0; border-bottom: 0.5px solid var(--border);
-    gap: 8px;
-  }
+  .session-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 0.5px solid var(--border); gap: 8px; }
   .session-item:last-child { border-bottom: none; padding-bottom: 0; }
   .session-left { flex: 1; min-width: 0; }
   .session-date { font-size: 11px; color: var(--text3); font-family: var(--font-mono); }
@@ -153,40 +121,18 @@
   .session-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
   .session-kwh { font-size: 15px; font-weight: 500; font-family: var(--font-mono); color: var(--text); }
   .session-cost { font-size: 13px; font-family: var(--font-mono); color: var(--accent); }
-  .btn-del {
-    background: transparent; border: 0.5px solid var(--border);
-    border-radius: 6px; color: var(--text3);
-    font-size: 14px; padding: 4px 8px; cursor: pointer;
-    transition: border-color 0.15s, color 0.15s;
-    -webkit-appearance: none;
-  }
+  .btn-del { background: transparent; border: 0.5px solid var(--border); border-radius: 6px; color: var(--text3); font-size: 14px; padding: 4px 8px; cursor: pointer; -webkit-appearance: none; }
   .btn-del:active { color: var(--danger); border-color: var(--danger); }
 
-  .empty-state {
-    text-align: center; padding: 32px 0;
-    color: var(--text3); font-size: 13px; font-family: var(--font-mono);
-  }
+  .empty-state { text-align: center; padding: 32px 0; color: var(--text3); font-size: 13px; font-family: var(--font-mono); }
 
-  .toast {
-    position: fixed; bottom: calc(24px + env(safe-area-inset-bottom));
-    left: 50%; transform: translateX(-50%) translateY(20px);
-    background: var(--accent); color: #0f0f0f;
-    font-family: var(--font-mono); font-size: 12px; font-weight: 500;
-    padding: 10px 20px; border-radius: 100px;
-    opacity: 0; transition: opacity 0.2s, transform 0.2s;
-    pointer-events: none; white-space: nowrap; z-index: 100;
-  }
+  .toast { position: fixed; bottom: calc(24px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%) translateY(20px); background: var(--accent); color: #0f0f0f; font-family: var(--font-mono); font-size: 12px; font-weight: 500; padding: 10px 20px; border-radius: 100px; opacity: 0; transition: opacity 0.2s, transform 0.2s; pointer-events: none; white-space: nowrap; z-index: 100; }
   .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-  .install-banner {
-    margin: 0 20px 16px;
-    background: var(--bg2); border: 0.5px solid var(--accent);
-    border-radius: var(--radius-sm); padding: 12px 16px;
-    display: flex; justify-content: space-between; align-items: center;
-    gap: 12px;
-  }
+  .install-banner { margin: 0 20px 16px; background: var(--bg2); border: 0.5px solid var(--accent); border-radius: var(--radius-sm); padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
   .install-text { font-size: 12px; color: var(--text2); font-family: var(--font-mono); line-height: 1.5; }
   .install-text strong { color: var(--accent); }
+  .hidden { display: none !important; }
 </style>
 </head>
 <body>
@@ -219,24 +165,26 @@
   </div>
 </div>
 
-<div id="install-banner" class="install-banner" style="display:none;">
-  <div class="install-text">
-    <strong>Als App installieren:</strong><br>
-    Safari → Teilen → "Zum Home-Bildschirm"
-  </div>
-  <button class="btn-ghost" onclick="document.getElementById('install-banner').style.display='none'">✕</button>
+<div id="install-banner" class="install-banner hidden">
+  <div class="install-text"><strong>Als App installieren:</strong><br>Safari → Teilen → "Zum Home-Bildschirm"</div>
+  <button class="btn-ghost" onclick="document.getElementById('install-banner').classList.add('hidden')">✕</button>
 </div>
 
 <div class="section">
   <div class="card">
     <div class="card-title">Neue Ladung</div>
 
+    <div class="mode-toggle">
+      <button class="mode-btn active" id="btn-soc" onclick="setMode('soc')">SOC % eingeben</button>
+      <button class="mode-btn" id="btn-kwh" onclick="setMode('kwh')">kWh direkt</button>
+    </div>
+
     <div class="form-row">
       <div class="form-group">
         <label>Datum</label>
         <input type="date" id="input-date" />
       </div>
-      <div class="form-group">
+      <div class="form-group" id="group-power">
         <label>App zeigt</label>
         <select id="power-select" onchange="updateLoss()">
           <option value="10">~2.0 kW (10A)</option>
@@ -246,27 +194,37 @@
       </div>
     </div>
 
-    <div class="form-row">
-      <div class="form-group">
-        <label>SOC Start %</label>
-        <input type="number" id="soc-start" min="0" max="100" placeholder="z.B. 21" oninput="updatePreview()" />
+    <div id="soc-inputs">
+      <div class="form-row">
+        <div class="form-group">
+          <label>SOC Start %</label>
+          <input type="number" id="soc-start" min="0" max="100" placeholder="z.B. 21" oninput="updatePreview()" />
+        </div>
+        <div class="form-group">
+          <label>SOC Ende %</label>
+          <input type="number" id="soc-end" min="0" max="100" placeholder="z.B. 49" oninput="updatePreview()" />
+        </div>
       </div>
-      <div class="form-group">
-        <label>SOC Ende %</label>
-        <input type="number" id="soc-end" min="0" max="100" placeholder="z.B. 49" oninput="updatePreview()" />
+      <div class="loss-row">
+        <div class="loss-header">
+          <span class="loss-label">OBC Ladeverlust</span>
+          <span class="loss-value" id="loss-display">12%</span>
+        </div>
+        <input type="range" id="loss-slider" min="8" max="25" step="1" value="12" oninput="onSlider()" />
+        <div class="range-hints"><span>8% schnell</span><span>25% langsam</span></div>
       </div>
     </div>
 
-    <div class="loss-row">
-      <div class="loss-header">
-        <span class="loss-label">OBC Ladeverlust</span>
-        <span class="loss-value" id="loss-display">12%</span>
+    <div id="kwh-inputs" class="hidden">
+      <div class="form-row">
+        <div class="form-group full">
+          <label>kWh (bekannter Wert)</label>
+          <input type="number" id="kwh-direct" min="0" step="0.01" placeholder="z.B. 5.60" oninput="updatePreview()" />
+        </div>
       </div>
-      <input type="range" id="loss-slider" min="8" max="25" step="1" value="12" oninput="onSlider()" />
-      <div class="range-hints"><span>8% schnell</span><span>25% langsam</span></div>
     </div>
 
-    <div class="preview-box" id="preview">SOC eingeben für Vorschau …</div>
+    <div class="preview-box" id="preview">Werte eingeben für Vorschau …</div>
 
     <button class="btn" onclick="addSession()">+ Ladung speichern</button>
   </div>
@@ -274,7 +232,7 @@
 
 <div class="section">
   <div class="card">
-    <div class="history-header">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
       <div class="card-title" style="margin-bottom:0;">Ladehistorie</div>
     </div>
     <div id="sessions-list"><div class="empty-state">Noch keine Ladungen eingetragen.</div></div>
@@ -288,27 +246,33 @@ const PRICE = 0.38;
 const NET_KWH = 19.7;
 const LOSS_BY_A = { '10': 12, '8': 15, '6': 20 };
 const STORE_KEY = 'cupra_ladetagebuch_v1';
-
 let sessions = [];
+let currentMode = 'soc';
 
 function load() {
-  try {
-    const raw = localStorage.getItem(STORE_KEY);
-    if (raw) sessions = JSON.parse(raw);
-  } catch(e) { sessions = []; }
+  try { const r = localStorage.getItem(STORE_KEY); if (r) sessions = JSON.parse(r); } catch(e) { sessions = []; }
 }
-
 function save() {
   try { localStorage.setItem(STORE_KEY, JSON.stringify(sessions)); } catch(e) {}
+}
+
+function setMode(mode) {
+  currentMode = mode;
+  document.getElementById('btn-soc').classList.toggle('active', mode === 'soc');
+  document.getElementById('btn-kwh').classList.toggle('active', mode === 'kwh');
+  document.getElementById('soc-inputs').classList.toggle('hidden', mode !== 'soc');
+  document.getElementById('kwh-inputs').classList.toggle('hidden', mode !== 'kwh');
+  document.getElementById('group-power').classList.toggle('hidden', mode !== 'soc');
+  document.getElementById('preview').textContent = 'Werte eingeben für Vorschau …';
+  document.getElementById('preview').classList.remove('active');
 }
 
 function getLoss() { return parseInt(document.getElementById('loss-slider').value); }
 
 function updateLoss() {
   const a = document.getElementById('power-select').value;
-  const loss = LOSS_BY_A[a];
-  document.getElementById('loss-slider').value = loss;
-  document.getElementById('loss-display').textContent = loss + '%';
+  document.getElementById('loss-slider').value = LOSS_BY_A[a];
+  document.getElementById('loss-display').textContent = LOSS_BY_A[a] + '%';
   updatePreview();
 }
 
@@ -322,39 +286,56 @@ function calcKwh(start, end, loss) {
 }
 
 function updatePreview() {
-  const s = parseFloat(document.getElementById('soc-start').value);
-  const e = parseFloat(document.getElementById('soc-end').value);
   const box = document.getElementById('preview');
-  if (!isNaN(s) && !isNaN(e) && e > s && s >= 0 && e <= 100) {
-    const kwh = calcKwh(s, e, getLoss());
-    const cost = kwh * PRICE;
-    box.innerHTML = '<span class="preview-kwh">' + kwh.toFixed(2) + ' kWh</span>&nbsp;&nbsp;·&nbsp;&nbsp;' + cost.toFixed(2) + ' € &nbsp;&nbsp;·&nbsp;&nbsp;Verlust ' + getLoss() + '%';
-    box.classList.add('active');
+  if (currentMode === 'soc') {
+    const s = parseFloat(document.getElementById('soc-start').value);
+    const e = parseFloat(document.getElementById('soc-end').value);
+    if (!isNaN(s) && !isNaN(e) && e > s && s >= 0 && e <= 100) {
+      const kwh = calcKwh(s, e, getLoss());
+      box.innerHTML = '<span class="preview-kwh">' + kwh.toFixed(2) + ' kWh</span>&nbsp;·&nbsp;' + (kwh * PRICE).toFixed(2) + ' €&nbsp;·&nbsp;Verlust ' + getLoss() + '%';
+      box.classList.add('active');
+    } else {
+      box.textContent = 'Werte eingeben für Vorschau …'; box.classList.remove('active');
+    }
   } else {
-    box.textContent = 'SOC eingeben für Vorschau …';
-    box.classList.remove('active');
+    const k = parseFloat(document.getElementById('kwh-direct').value);
+    if (!isNaN(k) && k > 0) {
+      box.innerHTML = '<span class="preview-kwh">' + k.toFixed(2) + ' kWh</span>&nbsp;·&nbsp;' + (k * PRICE).toFixed(2) + ' €';
+      box.classList.add('active');
+    } else {
+      box.textContent = 'Werte eingeben für Vorschau …'; box.classList.remove('active');
+    }
   }
 }
 
 function addSession() {
-  const s = parseFloat(document.getElementById('soc-start').value);
-  const e = parseFloat(document.getElementById('soc-end').value);
   const date = document.getElementById('input-date').value || today();
-  const a = document.getElementById('power-select').value;
-  const loss = getLoss();
-  const powerLabel = a === '10' ? '~2.0 kW' : a === '8' ? '~1.6 kW' : '~1.0 kW';
+  let kwh, label, meta;
 
-  if (isNaN(s) || isNaN(e) || e <= s || s < 0 || e > 100) {
-    showToast('SOC-Werte prüfen!'); return;
+  if (currentMode === 'soc') {
+    const s = parseFloat(document.getElementById('soc-start').value);
+    const e = parseFloat(document.getElementById('soc-end').value);
+    if (isNaN(s) || isNaN(e) || e <= s || s < 0 || e > 100) { showToast('SOC-Werte prüfen!'); return; }
+    const a = document.getElementById('power-select').value;
+    const loss = getLoss();
+    const powerLabel = a === '10' ? '~2.0 kW' : a === '8' ? '~1.6 kW' : '~1.0 kW';
+    kwh = parseFloat(calcKwh(s, e, loss).toFixed(3));
+    label = s + '% → ' + e + '%';
+    meta = powerLabel + ' · ' + loss + '% Verlust';
+    document.getElementById('soc-start').value = '';
+    document.getElementById('soc-end').value = '';
+  } else {
+    kwh = parseFloat(parseFloat(document.getElementById('kwh-direct').value).toFixed(3));
+    if (isNaN(kwh) || kwh <= 0) { showToast('kWh-Wert prüfen!'); return; }
+    label = kwh.toFixed(2) + ' kWh (direkt)';
+    meta = 'Direkteingabe';
+    document.getElementById('kwh-direct').value = '';
   }
 
-  const kwh = parseFloat(calcKwh(s, e, loss).toFixed(3));
-  sessions.unshift({ id: Date.now(), date, kwh, label: s + '% → ' + e + '%', powerLabel, loss });
+  sessions.unshift({ id: Date.now(), date, kwh, label, meta });
   save();
   renderAll();
-  document.getElementById('soc-start').value = '';
-  document.getElementById('soc-end').value = '';
-  document.getElementById('preview').textContent = 'SOC eingeben für Vorschau …';
+  document.getElementById('preview').textContent = 'Werte eingeben für Vorschau …';
   document.getElementById('preview').classList.remove('active');
   showToast('Ladung gespeichert ✓');
 }
@@ -371,18 +352,14 @@ function renderAll() {
   document.getElementById('stat-kwh').textContent = totalKwh.toFixed(2);
   document.getElementById('stat-cost').textContent = (totalKwh * PRICE).toFixed(2);
   document.getElementById('stat-count').textContent = sessions.length;
-
   const list = document.getElementById('sessions-list');
-  if (sessions.length === 0) {
-    list.innerHTML = '<div class="empty-state">Noch keine Ladungen eingetragen.</div>';
-    return;
-  }
+  if (sessions.length === 0) { list.innerHTML = '<div class="empty-state">Noch keine Ladungen eingetragen.</div>'; return; }
   list.innerHTML = sessions.map(s => `
     <div class="session-item">
       <div class="session-left">
         <div class="session-date">${s.date}</div>
         <div class="session-soc">${s.label}</div>
-        <div class="session-meta">${s.powerLabel} · ${s.loss}% Verlust</div>
+        <div class="session-meta">${s.meta}</div>
       </div>
       <div class="session-right">
         <div>
@@ -398,45 +375,34 @@ function renderAll() {
 function exportCSV() {
   if (sessions.length === 0) { showToast('Keine Daten zum Exportieren'); return; }
   const totalKwh = sessions.reduce((a, s) => a + s.kwh, 0);
-  let csv = 'Datum,SOC,Leistung,Verlust %,kWh,Kosten EUR\n';
-  sessions.forEach(s => {
-    csv += `${s.date},"${s.label}",${s.powerLabel},${s.loss},${s.kwh.toFixed(3)},${(s.kwh * PRICE).toFixed(2)}\n`;
-  });
-  csv += `\nGesamt,,,, ${totalKwh.toFixed(3)},${(totalKwh * PRICE).toFixed(2)}\n`;
+  let csv = 'Datum,Beschreibung,Details,kWh,Kosten EUR\n';
+  sessions.forEach(s => { csv += `${s.date},"${s.label}","${s.meta}",${s.kwh.toFixed(3)},${(s.kwh * PRICE).toFixed(2)}\n`; });
+  csv += `\nGesamt,,,${totalKwh.toFixed(3)},${(totalKwh * PRICE).toFixed(2)}\n`;
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = 'ladetagebuch_cupra.csv';
-  a.click(); URL.revokeObjectURL(url);
+  const a = document.createElement('a'); a.href = url; a.download = 'ladetagebuch_cupra.csv'; a.click();
+  URL.revokeObjectURL(url);
   showToast('CSV exportiert ✓');
 }
 
-function today() {
-  return new Date().toISOString().split('T')[0];
-}
+function today() { return new Date().toISOString().split('T')[0]; }
 
 let toastTimer;
 function showToast(msg) {
   const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
+  t.textContent = msg; t.classList.add('show');
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => t.classList.remove('show'), 2000);
 }
 
 function checkInstallBanner() {
   const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
-  const isStandalone = window.navigator.standalone === true;
-  if (isIOS && !isStandalone) {
-    document.getElementById('install-banner').style.display = 'flex';
-  }
+  if (isIOS && !window.navigator.standalone) document.getElementById('install-banner').classList.remove('hidden');
 }
 
-load();
-renderAll();
+load(); renderAll();
 document.getElementById('input-date').value = today();
 checkInstallBanner();
 </script>
-
 </body>
 </html>
