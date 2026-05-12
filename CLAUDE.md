@@ -135,3 +135,36 @@ Bei UI-Änderungen Browser-DevTools im Mobile-Viewport (iPhone) nutzen.
 - Neue Statistiken (z. B. €/Monat, kWh/Woche)
 - Backup/Sync-Verbesserungen
 - Preisänderungen oder Mehrtarif-Logik (sobald der Vermieter den Preis ändert)
+
+## Pflege: Assets neu erzeugen
+
+Das Repo enthält generierte Assets (Icon-PNGs, lokale WOFF2-Fonts). Wer
+sie verändern will, findet hier die ursprünglichen Befehle (macOS).
+
+**Icon-PNGs aus `icon.svg`** (master ist die SVG-Datei):
+
+```bash
+mkdir -p /tmp/iconout
+qlmanage -t -s 512 -o /tmp/iconout icon.svg
+cp /tmp/iconout/icon.svg.png icon-512.png
+sips -z 192 192 icon-512.png --out icon-192.png
+sips -z 180 180 icon-512.png --out apple-touch-icon.png
+```
+
+`qlmanage` ist macOS-Quick-Look und rendert SVG zu PNG. Auf anderen
+Systemen geht z. B. `rsvg-convert` oder ImageMagick.
+
+**Fonts neu von Google Fonts holen** (Safari-User-Agent ist Pflicht,
+sonst gibt's TTF statt WOFF2):
+
+```bash
+UA='Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Safari/605.1.15'
+curl -sSL -H "User-Agent: $UA" \
+  'https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700&display=swap'
+# → liefert das CSS mit den aktuellen woff2-URLs. Die URLs ändern sich
+#   gelegentlich (Hash im Pfad), deshalb das CSS einmal greppen und die
+#   fonts/*.woff2 entsprechend neu ziehen.
+```
+
+Wenn sich danach Asset-Inhalte geändert haben, **`CACHE_VERSION` in
+`sw.js` hochzählen** — siehe "Offline-Strategie".
