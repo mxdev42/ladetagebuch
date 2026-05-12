@@ -13,19 +13,48 @@ abgelesen wurde — er rechnet aus Akku-SOC × Kapazität / (1 − Verlust).
 
 ## Architektur
 
-**Single-File-App.** Alles (HTML, CSS, JS) steckt in `index.html`. Kein Build,
-keine Dependencies, kein Framework. Öffnen mit Doppelklick oder per
-`python3 -m http.server` reicht zum Testen.
+App-Code lebt vollständig in `index.html` (HTML + CSS + JS). Kein Build,
+keine npm-Dependencies, kein Framework. Daneben gibt es ein paar statische
+PWA-Assets:
 
-Aktuell ist die App eine installierbare iOS-WebApp ("Zum Home-Bildschirm
-hinzufügen") — sie hat **kein** `manifest.webmanifest` und **keinen** Service
-Worker. Trotzdem wird sie im UI als "PWA" bezeichnet, weil sie standalone
-laufen kann (`apple-mobile-web-app-capable`).
+```
+index.html              ← App-Code
+manifest.webmanifest    ← PWA-Manifest
+sw.js                   ← Service Worker (Offline-Cache)
+icon.svg                ← Master-Icon
+icon-192.png            ← Manifest-Icon (Android)
+icon-512.png            ← Manifest-Icon + Splash (maskable)
+apple-touch-icon.png    ← 180×180 für iOS-Homescreen
+fonts/*.woff2           ← Syne + DM Mono, lokal (Offline-fähig)
+```
+
+Zum Testen `python3 -m http.server` im Repo-Root — direkt per `file://` zu
+öffnen klappt **nicht**, weil Service Worker einen HTTP(S)-Origin brauchen.
+
+Die App ist eine echte installierbare PWA: Manifest, Service Worker und
+lokale Fonts sind eingebunden. Auf iOS via "Zum Home-Bildschirm hinzufügen",
+auf Android/Chrome erscheint der native Install-Prompt.
 
 Persistenz:
 - `localStorage` unter dem Key `cupra_ladetagebuch_v1`
 - Manueller Export/Import via Web Share API (iOS → "In Dateien sichern" →
   iCloud Drive) bzw. File-Picker zum Import einer JSON
+
+## Offline-Strategie (Service Worker)
+
+`sw.js` precached beim `install` alle Dateien aus `ASSETS[]`. Im
+`fetch`-Handler:
+
+- **HTML / Navigation**: network-first mit Cache-Fallback. Online liegt
+  also immer die neueste Version vor; offline wird der zuletzt gecachte
+  Stand von `./index.html` ausgeliefert.
+- **Statische Assets** (Fonts, Icons, Manifest): cache-first.
+
+**Update-Workflow für statische Assets**: Wenn du `sw.js` oder eine Datei
+aus `ASSETS[]` änderst, **zähle `CACHE_VERSION` hoch** (`v1` → `v2` …).
+Sonst liefert der alte Cache weiter die alten Dateien aus. `index.html`
+selbst ist davon ausgenommen — sie wird per network-first immer frisch
+geholt, wenn online.
 
 ## Domänenlogik (in `index.html` ab dem `<script>`-Block)
 
@@ -73,8 +102,9 @@ ein nacktes Array oder `{ eintraege: [...], version: 1 }`.
   für domänenspezifische Begriffe (`eintraege`, `Ladung`, `Verlust`) auf
   Deutsch halten. Technische Bezeichner wie `sessions`/`kwh` bleiben englisch
   — bestehender Stil.
-- **Keine externen Dependencies.** Keine npm-Pakete, keine CDN-Frameworks.
-  Google Fonts (Syne, DM Mono) sind die einzige externe Abhängigkeit.
+- **Keine externen Dependencies.** Keine npm-Pakete, keine CDN-Frameworks,
+  keine externen Fonts/Skripte zur Laufzeit — alles liegt im Repo, damit
+  die App offline ohne Netz läuft.
 - **Mobile-first.** Primäres Zielgerät ist iPhone im Standalone-Modus.
   Touch-Targets ≥ 40 px, `env(safe-area-inset-*)` beachten.
 - **Storage-Migrationen.** Wenn sich das Eintragsschema ändert, den
@@ -94,6 +124,8 @@ Es gibt keine Test-Suite. Manueller Smoke-Test reicht:
 5. Eintrag speichern → Liste & Stats aktualisieren sich
 6. Reload → Eintrag bleibt (localStorage)
 7. CSV-Export und JSON-Export öffnen sich/laden runter
+8. **Offline-Check**: DevTools → Application → Service Workers → "Offline"
+   anhaken, dann Reload — App muss vollständig funktionieren (inkl. Fonts).
 
 Bei UI-Änderungen Browser-DevTools im Mobile-Viewport (iPhone) nutzen.
 
@@ -101,6 +133,5 @@ Bei UI-Änderungen Browser-DevTools im Mobile-Viewport (iPhone) nutzen.
 
 - Neue Eingabefelder/Felder in der Historie
 - Neue Statistiken (z. B. €/Monat, kWh/Woche)
-- PWA echt machen: `manifest.webmanifest` + Service Worker für Offline
 - Backup/Sync-Verbesserungen
 - Preisänderungen oder Mehrtarif-Logik (sobald der Vermieter den Preis ändert)
