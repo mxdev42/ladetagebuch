@@ -1,0 +1,13 @@
+.DS_Store
+*.log
+*.swp
+*.swo
+.vscode/
+.idea/
+
+# Claude Code Worktrees / lokale Tool-Daten
+.claude/
+
+# Exporte / lokale Daten
+ladetagebuch.json
+ladetagebuch.csv
