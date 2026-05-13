@@ -82,7 +82,7 @@ bzw. an Fahrzeugdaten:
 | `LOSS_BY_A`   | siehe | OBC-Ladeverlust nach Ladestrom               |
 
 `LOSS_BY_A`:
-- 10 A (~2.0 kW) → 12 % Verlust
+- 10 A (~2.0 kW) → 15 % Verlust (gemessen 2026-05-14: 13,89 kWh für 17→77 % SOC)
 - 8 A (~1.6 kW) → 15 % Verlust
 - 6 A (~1.0 kW) → 20 % Verlust
 

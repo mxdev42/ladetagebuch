@@ -214,9 +214,9 @@
       <div class="loss-row">
         <div class="loss-header">
           <span class="loss-label">OBC Ladeverlust</span>
-          <span class="loss-value" id="loss-display">12%</span>
+          <span class="loss-value" id="loss-display">15%</span>
         </div>
-        <input type="range" id="loss-slider" min="8" max="25" step="1" value="12" oninput="onSlider()" />
+        <input type="range" id="loss-slider" min="8" max="25" step="1" value="15" oninput="onSlider()" />
         <div class="range-hints"><span>8% schnell</span><span>25% langsam</span></div>
       </div>
     </div>
@@ -250,7 +250,7 @@
 <script>
 const PRICE = 0.38;
 const NET_KWH = 19.7;
-const LOSS_BY_A = { '10': 12, '8': 15, '6': 20 };
+const LOSS_BY_A = { '10': 15, '8': 15, '6': 20 };
 const STORE_KEY = 'cupra_ladetagebuch_v1';
 let sessions = [];
 let currentMode = 'soc';
