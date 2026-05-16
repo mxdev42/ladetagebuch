@@ -273,11 +273,12 @@ let currentMode = 'soc';
 let currentPrice = DEFAULT_PRICE;
 let editingId = null;
 
-function load() {
-  try { const r = localStorage.getItem(STORE_KEY); if (r) sessions = JSON.parse(r); } catch(e) { sessions = []; }
-  // Migration: alten Einträgen loss-, price- und socStart/socEnd-Felder nachziehen
+// Migration: alten Einträgen loss-, price- und socStart/socEnd-Felder nachziehen.
+// Wird bei load() UND nach importFromFile() aufgerufen, damit importierte
+// Alt-Daten nicht halb-migriert ins Rendering laufen.
+function migrateEntries(entries) {
   let dirty = false;
-  for (const s of sessions) {
+  for (const s of entries) {
     if (typeof s.loss !== 'number') {
       const m = (s.meta || '').match(/(\d+)\s*%\s*Verlust/);
       s.loss = m ? parseInt(m[1], 10) : 15;
@@ -298,7 +299,12 @@ function load() {
       }
     }
   }
-  if (dirty) save();
+  return dirty;
+}
+
+function load() {
+  try { const r = localStorage.getItem(STORE_KEY); if (r) sessions = JSON.parse(r); } catch(e) { sessions = []; }
+  if (migrateEntries(sessions)) save();
 }
 function save() {
   try { localStorage.setItem(STORE_KEY, JSON.stringify(sessions)); } catch(e) {}
@@ -591,6 +597,7 @@ function importFromFile(event) {
         sessions = [...sessions, ...neu].sort((a, b) => b.id - a.id);
       }
 
+      migrateEntries(sessions);
       save();
       renderAll();
       showToast(eintraege.length + ' Einträge geladen ✓');

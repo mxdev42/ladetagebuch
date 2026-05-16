@@ -208,13 +208,20 @@ Es gibt keine Test-Suite. Manueller Smoke-Test ist Pflicht:
 
 1. `python3 -m http.server 8000` im Repo-Root
 2. http://localhost:8000 öffnen
-3. SOC-Modus: Werte eingeben → Vorschau muss kWh und € zeigen
+3. SOC-Modus: Werte eingeben → Vorschau muss kWh, €, Verlust-€ und Netto-€/kWh zeigen
 4. kWh-Modus: Direkteingabe testen
 5. Eintrag speichern → Liste & Stats aktualisieren sich
 6. Reload → Eintrag bleibt (localStorage)
-7. CSV-Export und JSON-Export öffnen sich/laden runter
-8. **Offline-Check**: DevTools → Application → Service Workers → "Offline"
-   anhaken, dann Reload — App muss vollständig funktionieren (inkl. Fonts).
+7. **Eintrag bearbeiten (✎)**: Verlust ändern → Speichern → kWh und Verlust-€
+   müssen sich neu berechnet haben (bei SOC-Einträgen)
+8. **Einstellungen**: Strompreis ändern → Speichern → Vorschau und neue
+   Einträge nutzen den neuen Preis; alte Einträge behalten ihren
+9. CSV-Export und JSON-Export öffnen sich/laden runter
+10. JSON-Re-Import einer eigenen Export-Datei → Einträge erscheinen, alte
+    Felder (`loss`, `price`, `socStart`/`socEnd`) werden via `migrateEntries()`
+    nachgezogen
+11. **Offline-Check**: DevTools → Application → Service Workers → "Offline"
+    anhaken, dann Reload — App muss vollständig funktionieren (inkl. Fonts).
 
 Bei UI-Änderungen Browser-DevTools im Mobile-Viewport (iPhone) nutzen.
 
@@ -223,7 +230,9 @@ Bei UI-Änderungen Browser-DevTools im Mobile-Viewport (iPhone) nutzen.
 - Neue Eingabefelder/Felder in der Historie
 - Neue Statistiken (z. B. €/Monat, kWh/Woche)
 - Backup/Sync-Verbesserungen
-- Preisänderungen oder Mehrtarif-Logik (sobald der Vermieter den Preis ändert)
+- Mehrtarif-Logik (z. B. Tag/Nacht-Tarif) — der einfache Strompreis ist
+  schon editierbar (siehe "Einstellungen"-Card), aber pro Eintrag gilt
+  genau ein Preis
 
 ## Pflege: Assets neu erzeugen
 
