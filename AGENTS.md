@@ -106,26 +106,54 @@ kWh = NET_KWH · (SOC_ende − SOC_start) / 100 / (1 − Verlust/100)
 
 ## Datenmodell
 
-Ein Eintrag in `sessions[]`:
+Es gibt zwei Eintrags-Typen, unterschieden durch das Feld `socStart`:
+
+**SOC-Eintrag** — `socStart`/`socEnd` sind Source of Truth, `kwh` ist abgeleitet:
 
 ```js
 {
   id: 1715500000000,             // Date.now()
   date: "2026-05-12",            // YYYY-MM-DD
-  kwh: 5.612,                    // Brutto-kWh (NOVKIT-Wert / SOC-Hochrechnung), 3 Nachkommastellen
-  label: "21% → 49%",            // oder "5.60 kWh (direkt)"
-  meta: "~2.2 kW · 15% Verlust", // oder "Direkteingabe · 15% Verlust"
-  loss: 15,                      // Verlust-% für diesen Eintrag (für €-Verlust- und Netto-Preis-Anzeige)
-  price: 0.38                    // €/kWh, der zu diesem Zeitpunkt galt
+  socStart: 21,                  // SOC % am Anfang
+  socEnd: 49,                    // SOC % am Ende
+  loss: 15,                      // Verlust-%
+  price: 0.38,                   // €/kWh
+  kwh: 5.612,                    // abgeleitet: NET_KWH·(socEnd−socStart)/100/(1−loss/100)
+  label: "21% → 49%",            // abgeleitet aus socStart/socEnd
+  meta: "~2.2 kW · 15% Verlust"  // abgeleitet aus loss
 }
 ```
 
+**kWh-Direkt-Eintrag** — `kwh` ist Source of Truth (vom NOVKIT abgelesen):
+
+```js
+{
+  id: 1715500000000,
+  date: "2026-05-12",
+  kwh: 5.612,                       // Source of Truth
+  loss: 15,                         // nur für €-Verlust- und Netto-Preis-Anzeige
+  price: 0.38,
+  label: "5.61 kWh (direkt)",       // abgeleitet aus kwh
+  meta: "Direkteingabe · 15% Verlust" // abgeleitet aus loss
+}
+```
+
+`label`, `meta` und (bei SOC) `kwh` werden über die Helper-Funktion
+`refreshDerived(s)` aus den Source-of-Truth-Feldern berechnet — in
+`addSession` und `saveEdit` nach jeder Änderung.
+
+Editierbar pro Eintrag (über das ✎-Icon): `date`, `loss`, sowie
+`socStart`/`socEnd` (bei SOC-Einträgen) bzw. `kwh` (bei Direkt-Einträgen).
+`price` ist bewusst **nicht** editierbar — der gespeicherte Erfassungs-Preis
+ist die Wahrheit für die Abrechnung.
+
 Reihenfolge: neueste zuerst (`unshift`). Import unterstützt zwei Formate:
 ein nacktes Array oder `{ eintraege: [...], version: 1 }`. Alte Einträge
-werden in `load()` migriert: fehlendes `loss` wird aus `meta` geparst
-(sonst Default 15 %), fehlendes `price` wird auf `DEFAULT_PRICE` (0.38)
-gesetzt — das war der Wert, der vor Einführung des editierbaren Preises
-galt.
+werden in `load()` migriert:
+- fehlendes `loss` → aus `meta` geparst, sonst 15 %
+- fehlendes `price` → `DEFAULT_PRICE` (0.38)
+- fehlendes `socStart`/`socEnd` → aus Label "X% → Y%" geparst (nur SOC-Einträge;
+  Direkt-Einträge bleiben ohne socStart/socEnd)
 
 Aus `loss` und `price` werden zwei Werte pro Eintrag abgeleitet:
 - **Verlust in €**: `kwh × price × loss/100` — wie viel des Preises auf

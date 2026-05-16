@@ -118,8 +118,17 @@
   .session-cost { font-size: 13px; font-family: var(--font-mono); color: var(--accent); }
   .session-loss, .session-effective { font-size: 10px; color: var(--text3); font-family: var(--font-mono); margin-top: 2px; }
   .hint { font-size: 11px; color: var(--text3); font-family: var(--font-mono); line-height: 1.4; margin-top: 8px; }
-  .btn-del { background: transparent; border: 0.5px solid var(--border); border-radius: 6px; color: var(--text3); font-size: 14px; padding: 4px 8px; cursor: pointer; -webkit-appearance: none; }
+  .btn-edit, .btn-del { background: transparent; border: 0.5px solid var(--border); border-radius: 6px; color: var(--text3); font-size: 14px; padding: 4px 8px; cursor: pointer; -webkit-appearance: none; }
+  .btn-edit:active { color: var(--accent); border-color: var(--accent); }
   .btn-del:active { color: var(--danger); border-color: var(--danger); }
+  .session-edit { background: var(--bg3); border-radius: var(--radius-sm); padding: 12px; margin: 4px 0; border-bottom: 0.5px solid var(--border); }
+  .session-edit:last-child { border-bottom: none; }
+  .session-edit .form-row { margin-bottom: 8px; }
+  .session-edit input { font-size: 13px; padding: 8px 10px; }
+  .session-edit .edit-header { font-size: 11px; color: var(--text3); font-family: var(--font-mono); margin-bottom: 8px; }
+  .edit-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 8px; }
+  .edit-actions .btn-ghost { font-size: 11px; padding: 6px 12px; }
+  .edit-actions .btn-ghost.save { border-color: var(--accent); color: var(--accent); }
 
   .empty-state { text-align: center; padding: 32px 0; color: var(--text3); font-size: 13px; font-family: var(--font-mono); }
 
@@ -262,10 +271,11 @@ const PRICE_KEY = 'cupra_ladetagebuch_price';
 let sessions = [];
 let currentMode = 'soc';
 let currentPrice = DEFAULT_PRICE;
+let editingId = null;
 
 function load() {
   try { const r = localStorage.getItem(STORE_KEY); if (r) sessions = JSON.parse(r); } catch(e) { sessions = []; }
-  // Migration: alten Einträgen loss- und price-Feld nachziehen
+  // Migration: alten Einträgen loss-, price- und socStart/socEnd-Felder nachziehen
   let dirty = false;
   for (const s of sessions) {
     if (typeof s.loss !== 'number') {
@@ -276,6 +286,16 @@ function load() {
     if (typeof s.price !== 'number') {
       s.price = DEFAULT_PRICE;
       dirty = true;
+    }
+    // SOC-Einträge erkennen am Label "X% → Y%" und Start/Ende extrahieren.
+    // kWh-Direkt-Einträge ("X kWh (direkt)") bleiben ohne socStart/socEnd.
+    if (typeof s.socStart !== 'number' && typeof s.socEnd !== 'number') {
+      const m = (s.label || '').match(/^(\d+)\s*%\s*(?:→|->)\s*(\d+)\s*%$/);
+      if (m) {
+        s.socStart = parseInt(m[1], 10);
+        s.socEnd = parseInt(m[2], 10);
+        dirty = true;
+      }
     }
   }
   if (dirty) save();
@@ -306,6 +326,19 @@ function savePrice() {
 
 function lossCost(kwh, loss, price) { return kwh * price * (loss / 100); }
 function effectivePrice(loss, price) { return price / (1 - loss / 100); }
+
+// SOC-Einträge: kwh, label, meta aus socStart/socEnd/loss (re-)berechnen.
+// Direkt-Einträge: kwh ist Source of Truth, nur label und meta refreshen.
+function refreshDerived(s) {
+  if (typeof s.socStart === 'number') {
+    s.kwh = parseFloat(calcKwh(s.socStart, s.socEnd, s.loss).toFixed(3));
+    s.label = s.socStart + '% → ' + s.socEnd + '%';
+    s.meta = '~2.2 kW · ' + s.loss + '% Verlust';
+  } else {
+    s.label = s.kwh.toFixed(2) + ' kWh (direkt)';
+    s.meta = 'Direkteingabe · ' + s.loss + '% Verlust';
+  }
+}
 
 function setMode(mode) {
   currentMode = mode;
@@ -358,28 +391,25 @@ function resetPreview() {
 
 function addSession() {
   const date = document.getElementById('input-date').value || today();
-  let kwh, label, meta, loss;
+  let entry;
 
   if (currentMode === 'soc') {
     const s = parseFloat(document.getElementById('soc-start').value);
     const e = parseFloat(document.getElementById('soc-end').value);
     if (isNaN(s) || isNaN(e) || e <= s || s < 0 || e > 100) { showToast('SOC-Werte prüfen!'); return; }
-    loss = getLoss();
-    kwh = parseFloat(calcKwh(s, e, loss).toFixed(3));
-    label = s + '% → ' + e + '%';
-    meta = '~2.2 kW · ' + loss + '% Verlust';
+    const loss = getLoss();
+    entry = { id: Date.now(), date, socStart: s, socEnd: e, loss, price: currentPrice };
     document.getElementById('soc-start').value = '';
     document.getElementById('soc-end').value = '';
   } else {
-    kwh = parseFloat(parseFloat(document.getElementById('kwh-direct').value).toFixed(3));
+    const kwh = parseFloat(parseFloat(document.getElementById('kwh-direct').value).toFixed(3));
     if (isNaN(kwh) || kwh <= 0) { showToast('kWh-Wert prüfen!'); return; }
-    loss = getLoss();
-    label = kwh.toFixed(2) + ' kWh (direkt)';
-    meta = 'Direkteingabe · ' + loss + '% Verlust';
+    const loss = getLoss();
+    entry = { id: Date.now(), date, kwh, loss, price: currentPrice };
     document.getElementById('kwh-direct').value = '';
   }
-
-  sessions.unshift({ id: Date.now(), date, kwh, label, meta, loss, price: currentPrice });
+  refreshDerived(entry);
+  sessions.unshift(entry);
   save();
   renderAll();
   resetPreview();
@@ -388,9 +418,40 @@ function addSession() {
 
 function removeSession(id) {
   sessions = sessions.filter(s => s.id !== id);
+  if (editingId === id) editingId = null;
   save();
   renderAll();
   showToast('Eintrag gelöscht');
+}
+
+function startEdit(id) { editingId = id; renderAll(); }
+function cancelEdit() { editingId = null; renderAll(); }
+
+function saveEdit(id) {
+  const s = sessions.find(x => x.id === id);
+  if (!s) return;
+  const newDate = document.getElementById('edit-date-' + id).value;
+  const newLoss = parseInt(document.getElementById('edit-loss-' + id).value, 10);
+  if (!newDate || isNaN(newLoss) || newLoss < 0 || newLoss > 50) { showToast('Werte prüfen!'); return; }
+
+  if (typeof s.socStart === 'number') {
+    const ns = parseFloat(document.getElementById('edit-soc-start-' + id).value);
+    const ne = parseFloat(document.getElementById('edit-soc-end-' + id).value);
+    if (isNaN(ns) || isNaN(ne) || ne <= ns || ns < 0 || ne > 100) { showToast('SOC-Werte prüfen!'); return; }
+    s.socStart = ns; s.socEnd = ne;
+  } else {
+    const nk = parseFloat(document.getElementById('edit-kwh-' + id).value);
+    if (isNaN(nk) || nk <= 0) { showToast('kWh-Wert prüfen!'); return; }
+    s.kwh = parseFloat(nk.toFixed(3));
+  }
+  s.date = newDate;
+  s.loss = newLoss;
+  refreshDerived(s);
+
+  save();
+  editingId = null;
+  renderAll();
+  showToast('Eintrag aktualisiert ✓');
 }
 
 function renderAll() {
@@ -402,11 +463,15 @@ function renderAll() {
 
   const list = document.getElementById('sessions-list');
   if (sessions.length === 0) { list.innerHTML = '<div class="empty-state">Noch keine Ladungen eingetragen.</div>'; return; }
-  list.innerHTML = sessions.map(s => {
-    const loss = s.loss;
-    const lossE = lossCost(s.kwh, loss, s.price);
-    const eff = effectivePrice(loss, s.price);
-    return `
+  list.innerHTML = sessions.map(s =>
+    s.id === editingId ? renderEditMode(s) : renderViewMode(s)
+  ).join('');
+}
+
+function renderViewMode(s) {
+  const lossE = lossCost(s.kwh, s.loss, s.price);
+  const eff = effectivePrice(s.loss, s.price);
+  return `
     <div class="session-item">
       <div class="session-left">
         <div class="session-date">${s.date}</div>
@@ -420,10 +485,53 @@ function renderAll() {
           <div class="session-loss">davon ${lossE.toFixed(2)} € Verlust</div>
           <div class="session-effective">${eff.toFixed(2)} €/kWh netto</div>
         </div>
-        <button class="btn-del" onclick="removeSession(${s.id})">✕</button>
+        <button class="btn-edit" onclick="startEdit(${s.id})" aria-label="Bearbeiten">✎</button>
+        <button class="btn-del" onclick="removeSession(${s.id})" aria-label="Löschen">✕</button>
       </div>
     </div>
-  `;}).join('');
+  `;
+}
+
+function renderEditMode(s) {
+  const isSoc = typeof s.socStart === 'number';
+  const socFields = `
+    <div class="form-row">
+      <div class="form-group">
+        <label>SOC Start %</label>
+        <input type="number" id="edit-soc-start-${s.id}" min="0" max="100" value="${s.socStart}">
+      </div>
+      <div class="form-group">
+        <label>SOC Ende %</label>
+        <input type="number" id="edit-soc-end-${s.id}" min="0" max="100" value="${s.socEnd}">
+      </div>
+    </div>`;
+  const kwhField = `
+    <div class="form-row">
+      <div class="form-group full">
+        <label>kWh</label>
+        <input type="number" id="edit-kwh-${s.id}" min="0" step="0.001" value="${s.kwh}">
+      </div>
+    </div>`;
+  return `
+    <div class="session-edit">
+      <div class="edit-header">Bearbeiten · ${s.price.toFixed(3)} €/kWh (Preis nicht änderbar)</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Datum</label>
+          <input type="date" id="edit-date-${s.id}" value="${s.date}">
+        </div>
+        <div class="form-group">
+          <label>Verlust %</label>
+          <input type="number" id="edit-loss-${s.id}" min="0" max="50" step="1" value="${s.loss}">
+        </div>
+      </div>
+      ${isSoc ? socFields : kwhField}
+      <div class="edit-actions">
+        <button class="btn-ghost" onclick="cancelEdit()">Abbrechen</button>
+        <button class="btn-ghost save" onclick="saveEdit(${s.id})">Speichern</button>
+      </div>
+    </div>
+  `;
 }
 
 // ─── iCloud Export ────────────────────────────────────────
