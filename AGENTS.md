@@ -79,22 +79,23 @@ bzw. an Fahrzeugdaten:
 |---------------|-------|----------------------------------------------|
 | `PRICE`       | 0.38  | €/kWh, der mit dem Vermieter abgerechnet wird|
 | `NET_KWH`     | 19.7  | Netto-Akkukapazität CUPRA Leon e-Hybrid (kWh)|
-| `LOSS_BY_A`   | siehe | OBC-Ladeverlust nach Ladestrom               |
 
-`LOSS_BY_A`:
-- 10 A (real 9,6 A → ~2,2 kW) → 15 % Verlust
-  - Messung 2026-05-14: 13,89 kWh für 17→77 % SOC → 14,9 % Verlust (saubere Einzelmessung)
-  - Messung 2026-05-16: 3,591 kWh für 64→80 % SOC → 17,7 % Verlust (gemischt 1 + 2 kW, nicht trennbar; konsistent mit 15 % bei 2,2 kW)
-- 8 A (~1,6 kW) → 15 % Verlust (geschätzt, noch nicht gemessen)
-- 6 A (~1,0 kW) → 20 % Verlust (geschätzt, noch nicht gemessen)
+**Ladeverlust:** Marco lädt zuhause immer mit dem Maximum (Auto-Setting
+"10 A", real 9,6 A × 230 V ≈ 2,2 kW). Der Default-Verlust ist deshalb
+fest auf 15 % gesetzt (Slider-Startwert in `index.html`), kann aber per
+Slider (8–25 %) manuell übersteuert werden. Frühere Mehrstufen-Logik
+(`LOSS_BY_A` für 10/8/6 A) wurde entfernt, weil nur eine Stufe genutzt
+wird.
+
+Messungen, die den 15-%-Wert stützen:
+- 2026-05-14: 13,89 kWh für 17→77 % SOC → 14,9 % Verlust (saubere Einzelmessung bei 2,2 kW)
+- 2026-05-16: 3,591 kWh für 64→80 % SOC → 17,7 % Verlust (gemischt 1 + 2 kW; konsistent mit 15 % bei 2,2 kW)
 
 Formel zur kWh-Berechnung aus SOC-Differenz:
 
 ```
 kWh = NET_KWH · (SOC_ende − SOC_start) / 100 / (1 − Verlust/100)
 ```
-
-Der Verlust kann per Slider (8–25 %) manuell übersteuert werden.
 
 ## Datenmodell
 
@@ -106,7 +107,7 @@ Ein Eintrag in `sessions[]`:
   date: "2026-05-12",           // YYYY-MM-DD
   kwh: 5.612,                   // mit 3 Nachkommastellen gespeichert
   label: "21% → 49%",           // oder "5.60 kWh (direkt)"
-  meta: "~2.0 kW · 12% Verlust" // oder "Direkteingabe"
+  meta: "~2.2 kW · 15% Verlust" // oder "Direkteingabe"
 }
 ```
 
@@ -117,8 +118,8 @@ ein nacktes Array oder `{ eintraege: [...], version: 1 }`.
 
 Marco arbeitet empirisch: er misst real (z. B. mit dem NOVKIT-Zähler an
 der Schuko-Steckdose) und kalibriert Code-Konstanten anhand der
-Messwerte — siehe `LOSS_BY_A`, die Verlust-Werte sind keine Schätzungen
-aus dem Datenblatt, sondern aus eigener Messung abgeleitet. Wenn Marco
+Messwerte — siehe Verlust-Wert, der aus eigener Messung abgeleitet ist
+und keine Schätzung aus dem Datenblatt. Wenn Marco
 "kann es sein dass …" oder eine ähnlich beobachtende Frage stellt,
 steckt meist eine konkrete eigene Beobachtung dahinter — ernst nehmen,
 im Code/Verhalten verifizieren statt abzuwiegeln.
