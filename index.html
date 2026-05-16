@@ -391,10 +391,7 @@ function exportToiCloud() {
   if (navigator.share) {
     // Datei über Share Sheet teilen → "In Dateien sichern" → iCloud Drive
     const file = new File([blob], 'ladetagebuch.json', { type: 'application/json' });
-    navigator.share({
-      files: [file],
-      title: 'Ladetagebuch CUPRA Leon',
-    }).then(() => {
+    navigator.share({ files: [file] }).then(() => {
       showToast('Gespeichert ✓');
     }).catch(() => {
       // Fallback: direkter Download
@@ -463,7 +460,7 @@ function exportCSV() {
   const url  = URL.createObjectURL(blob);
   if (navigator.share) {
     const file = new File([blob], 'ladetagebuch.csv', { type: 'text/csv' });
-    navigator.share({ files: [file], title: 'Ladetagebuch CSV' }).catch(() => triggerDownload(url));
+    navigator.share({ files: [file] }).catch(() => triggerDownload(url));
   } else {
     const a = document.createElement('a'); a.href = url; a.download = 'ladetagebuch.csv'; a.click();
   }
