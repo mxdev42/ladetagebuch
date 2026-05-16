@@ -8,7 +8,7 @@ Auf iPhone: Seite in Safari öffnen → Teilen → "Zum Home-Bildschirm
 hinzufügen". Läuft danach offline.
 
 Kontext, Architektur, Konventionen und Pflege-Befehle stehen in
-[CLAUDE.md](CLAUDE.md). Kurzfassung für Agenten: [AGENTS.md](AGENTS.md).
+[AGENTS.md](AGENTS.md). `CLAUDE.md` ist ein Symlink darauf.
 
 ## Lokal testen
 

@@ -111,6 +111,25 @@ Ein Eintrag in `sessions[]`:
 Reihenfolge: neueste zuerst (`unshift`). Import unterstützt zwei Formate:
 ein nacktes Array oder `{ eintraege: [...], version: 1 }`.
 
+## Arbeitsweise mit dem Nutzer
+
+Marco arbeitet empirisch: er misst real (z. B. mit dem NOVKIT-Zähler an
+der Schuko-Steckdose) und kalibriert Code-Konstanten anhand der
+Messwerte — siehe `LOSS_BY_A`, die Verlust-Werte sind keine Schätzungen
+aus dem Datenblatt, sondern aus eigener Messung abgeleitet. Wenn Marco
+"kann es sein dass …" oder eine ähnlich beobachtende Frage stellt,
+steckt meist eine konkrete eigene Beobachtung dahinter — ernst nehmen,
+im Code/Verhalten verifizieren statt abzuwiegeln.
+
+Kommunikationsstil: Deutsch, knapp, oft kleinbuchstaben, wenig
+Förmlichkeit. Antworten dürfen entsprechend kurz und direkt sein.
+
+**Commit + Push als Default:** In diesem Repo ist Pushen pauschal
+freigegeben. Nach einer abgeschlossenen Änderung direkt committen und
+pushen — nicht jedes Mal rückfragen. Das gilt explizit nur für dieses
+Projekt; in anderen Repos bleibt die normale Vorsichtsregel ("vor Push
+fragen") gültig.
+
 ## Konventionen
 
 - **Sprache: Deutsch.** UI-Texte, Toasts, Commit-Messages und Variablennamen
