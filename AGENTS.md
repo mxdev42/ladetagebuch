@@ -103,16 +103,27 @@ Ein Eintrag in `sessions[]`:
 
 ```js
 {
-  id: 1715500000000,            // Date.now()
-  date: "2026-05-12",           // YYYY-MM-DD
-  kwh: 5.612,                   // mit 3 Nachkommastellen gespeichert
-  label: "21% → 49%",           // oder "5.60 kWh (direkt)"
-  meta: "~2.2 kW · 15% Verlust" // oder "Direkteingabe"
+  id: 1715500000000,             // Date.now()
+  date: "2026-05-12",            // YYYY-MM-DD
+  kwh: 5.612,                    // Brutto-kWh (NOVKIT-Wert / SOC-Hochrechnung), 3 Nachkommastellen
+  label: "21% → 49%",            // oder "5.60 kWh (direkt)"
+  meta: "~2.2 kW · 15% Verlust", // oder "Direkteingabe · 15% Verlust"
+  loss: 15                       // Verlust-% für diesen Eintrag (für €-Verlust- und Netto-Preis-Anzeige)
 }
 ```
 
 Reihenfolge: neueste zuerst (`unshift`). Import unterstützt zwei Formate:
-ein nacktes Array oder `{ eintraege: [...], version: 1 }`.
+ein nacktes Array oder `{ eintraege: [...], version: 1 }`. Alte Einträge
+ohne `loss`-Field werden in `load()` migriert (aus `meta` geparst, sonst
+Default 15 %).
+
+Aus `loss` werden zwei Werte pro Eintrag abgeleitet:
+- **Verlust in €**: `kwh × PRICE × loss/100` — wie viel des Preises auf
+  den Ladeverlust entfällt
+- **Netto-Preis €/kWh**: `PRICE / (1 − loss/100)` — was 1 kWh **im Akku**
+  effektiv kostet. Vergleichswert zu öffentlichen Ladestationen (z. B.
+  11 kW-Lader mit ~5 % Verlust haben einen niedrigeren Wert pro Brutto-kWh,
+  aber einen anderen Netto-Preis je nach deren Verlust).
 
 ## Arbeitsweise mit dem Nutzer
 

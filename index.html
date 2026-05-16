@@ -113,8 +113,10 @@
   .session-soc { font-size: 14px; color: var(--text); margin: 2px 0; }
   .session-meta { font-size: 11px; color: var(--text3); font-family: var(--font-mono); }
   .session-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+  .session-right > div { text-align: right; }
   .session-kwh { font-size: 15px; font-weight: 500; font-family: var(--font-mono); }
   .session-cost { font-size: 13px; font-family: var(--font-mono); color: var(--accent); }
+  .session-loss, .session-effective { font-size: 10px; color: var(--text3); font-family: var(--font-mono); margin-top: 2px; }
   .btn-del { background: transparent; border: 0.5px solid var(--border); border-radius: 6px; color: var(--text3); font-size: 14px; padding: 4px 8px; cursor: pointer; -webkit-appearance: none; }
   .btn-del:active { color: var(--danger); border-color: var(--danger); }
 
@@ -248,10 +250,23 @@ let currentMode = 'soc';
 
 function load() {
   try { const r = localStorage.getItem(STORE_KEY); if (r) sessions = JSON.parse(r); } catch(e) { sessions = []; }
+  // Migration: alten Einträgen ein loss-Feld nachziehen (aus meta parsen, sonst 15 %)
+  let dirty = false;
+  for (const s of sessions) {
+    if (typeof s.loss !== 'number') {
+      const m = (s.meta || '').match(/(\d+)\s*%\s*Verlust/);
+      s.loss = m ? parseInt(m[1], 10) : 15;
+      dirty = true;
+    }
+  }
+  if (dirty) save();
 }
 function save() {
   try { localStorage.setItem(STORE_KEY, JSON.stringify(sessions)); } catch(e) {}
 }
+
+function lossCost(kwh, loss) { return kwh * PRICE * (loss / 100); }
+function effectivePrice(loss) { return PRICE / (1 - loss / 100); }
 
 function setMode(mode) {
   currentMode = mode;
@@ -275,18 +290,22 @@ function calcKwh(start, end, loss) {
 
 function updatePreview() {
   const box = document.getElementById('preview');
+  const loss = getLoss();
+  const eff = effectivePrice(loss);
   if (currentMode === 'soc') {
     const s = parseFloat(document.getElementById('soc-start').value);
     const e = parseFloat(document.getElementById('soc-end').value);
     if (!isNaN(s) && !isNaN(e) && e > s && s >= 0 && e <= 100) {
-      const kwh = calcKwh(s, e, getLoss());
-      box.innerHTML = '<span class="preview-kwh">' + kwh.toFixed(2) + ' kWh</span>&nbsp;·&nbsp;' + (kwh * PRICE).toFixed(2) + ' €&nbsp;·&nbsp;' + getLoss() + '% Verlust';
+      const kwh = calcKwh(s, e, loss);
+      const lossE = lossCost(kwh, loss);
+      box.innerHTML = `<span class="preview-kwh">${kwh.toFixed(2)} kWh</span>&nbsp;·&nbsp;${(kwh * PRICE).toFixed(2)} €&nbsp;·&nbsp;${loss}% Verlust (${lossE.toFixed(2)} €)&nbsp;·&nbsp;${eff.toFixed(2)} €/kWh netto`;
       box.classList.add('active');
     } else resetPreview();
   } else {
     const k = parseFloat(document.getElementById('kwh-direct').value);
     if (!isNaN(k) && k > 0) {
-      box.innerHTML = '<span class="preview-kwh">' + k.toFixed(2) + ' kWh</span>&nbsp;·&nbsp;' + (k * PRICE).toFixed(2) + ' €';
+      const lossE = lossCost(k, loss);
+      box.innerHTML = `<span class="preview-kwh">${k.toFixed(2)} kWh</span>&nbsp;·&nbsp;${(k * PRICE).toFixed(2)} €&nbsp;·&nbsp;davon ${lossE.toFixed(2)} € Verlust&nbsp;·&nbsp;${eff.toFixed(2)} €/kWh netto`;
       box.classList.add('active');
     } else resetPreview();
   }
@@ -300,13 +319,13 @@ function resetPreview() {
 
 function addSession() {
   const date = document.getElementById('input-date').value || today();
-  let kwh, label, meta;
+  let kwh, label, meta, loss;
 
   if (currentMode === 'soc') {
     const s = parseFloat(document.getElementById('soc-start').value);
     const e = parseFloat(document.getElementById('soc-end').value);
     if (isNaN(s) || isNaN(e) || e <= s || s < 0 || e > 100) { showToast('SOC-Werte prüfen!'); return; }
-    const loss = getLoss();
+    loss = getLoss();
     kwh = parseFloat(calcKwh(s, e, loss).toFixed(3));
     label = s + '% → ' + e + '%';
     meta = '~2.2 kW · ' + loss + '% Verlust';
@@ -315,12 +334,13 @@ function addSession() {
   } else {
     kwh = parseFloat(parseFloat(document.getElementById('kwh-direct').value).toFixed(3));
     if (isNaN(kwh) || kwh <= 0) { showToast('kWh-Wert prüfen!'); return; }
+    loss = getLoss();
     label = kwh.toFixed(2) + ' kWh (direkt)';
-    meta = 'Direkteingabe';
+    meta = 'Direkteingabe · ' + loss + '% Verlust';
     document.getElementById('kwh-direct').value = '';
   }
 
-  sessions.unshift({ id: Date.now(), date, kwh, label, meta });
+  sessions.unshift({ id: Date.now(), date, kwh, label, meta, loss });
   save();
   renderAll();
   resetPreview();
@@ -342,7 +362,11 @@ function renderAll() {
 
   const list = document.getElementById('sessions-list');
   if (sessions.length === 0) { list.innerHTML = '<div class="empty-state">Noch keine Ladungen eingetragen.</div>'; return; }
-  list.innerHTML = sessions.map(s => `
+  list.innerHTML = sessions.map(s => {
+    const loss = s.loss;
+    const lossE = lossCost(s.kwh, loss);
+    const eff = effectivePrice(loss);
+    return `
     <div class="session-item">
       <div class="session-left">
         <div class="session-date">${s.date}</div>
@@ -353,11 +377,13 @@ function renderAll() {
         <div>
           <div class="session-kwh">${s.kwh.toFixed(2)} kWh</div>
           <div class="session-cost">${(s.kwh * PRICE).toFixed(2)} €</div>
+          <div class="session-loss">davon ${lossE.toFixed(2)} € Verlust</div>
+          <div class="session-effective">${eff.toFixed(2)} €/kWh netto</div>
         </div>
         <button class="btn-del" onclick="removeSession(${s.id})">✕</button>
       </div>
     </div>
-  `).join('');
+  `;}).join('');
 }
 
 // ─── iCloud Export ────────────────────────────────────────
