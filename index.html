@@ -366,7 +366,6 @@ function exportToiCloud() {
   const data = { eintraege: sessions, exportiert: new Date().toISOString(), version: 1 };
   const json = JSON.stringify(data, null, 2);
   const blob = new Blob([json], { type: 'application/json' });
-  const url  = URL.createObjectURL(blob);
 
   // iOS Share Sheet via Web Share API
   if (navigator.share) {
@@ -376,19 +375,20 @@ function exportToiCloud() {
       showToast('Gespeichert ✓');
     }).catch(() => {
       // Fallback: direkter Download
-      triggerDownload(url);
+      triggerDownload(blob, 'ladetagebuch.json');
     });
   } else {
     // Desktop: direkter Download
-    triggerDownload(url);
+    triggerDownload(blob, 'ladetagebuch.json');
     showToast('JSON heruntergeladen ✓');
   }
-  URL.revokeObjectURL(url);
 }
 
-function triggerDownload(url) {
+function triggerDownload(blob, name) {
+  const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  a.href = url; a.download = 'ladetagebuch.json'; a.click();
+  a.href = url; a.download = name; a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 0);
 }
 
 // ─── iCloud Import ────────────────────────────────────────
@@ -438,14 +438,12 @@ function exportCSV() {
   sessions.forEach(s => { csv += `${s.date},"${s.label}","${s.meta}",${s.kwh.toFixed(3)},${(s.kwh * PRICE).toFixed(2)}\n`; });
   csv += `\nGesamt,,,${totalKwh.toFixed(3)},${(totalKwh * PRICE).toFixed(2)}\n`;
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-  const url  = URL.createObjectURL(blob);
   if (navigator.share) {
     const file = new File([blob], 'ladetagebuch.csv', { type: 'text/csv' });
-    navigator.share({ files: [file] }).catch(() => triggerDownload(url));
+    navigator.share({ files: [file] }).catch(() => triggerDownload(blob, 'ladetagebuch.csv'));
   } else {
-    const a = document.createElement('a'); a.href = url; a.download = 'ladetagebuch.csv'; a.click();
+    triggerDownload(blob, 'ladetagebuch.csv');
   }
-  URL.revokeObjectURL(url);
 }
 
 // ─── Helpers ──────────────────────────────────────────────
