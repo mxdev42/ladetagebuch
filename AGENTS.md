@@ -75,10 +75,17 @@ geholt, wenn online.
 Konstanten — **nicht ohne Rückfrage ändern**, sie hängen am Mietvertrag
 bzw. an Fahrzeugdaten:
 
-| Konstante     | Wert  | Bedeutung                                    |
-|---------------|-------|----------------------------------------------|
-| `PRICE`       | 0.38  | €/kWh, der mit dem Vermieter abgerechnet wird|
-| `NET_KWH`     | 19.7  | Netto-Akkukapazität CUPRA Leon e-Hybrid (kWh)|
+| Konstante       | Wert  | Bedeutung                                                              |
+|-----------------|-------|------------------------------------------------------------------------|
+| `DEFAULT_PRICE` | 0.38  | Seed-Wert für den €/kWh-Preis (erster App-Start, Migration alter Daten)|
+| `NET_KWH`       | 19.7  | Netto-Akkukapazität CUPRA Leon e-Hybrid (kWh)                          |
+
+**Aktueller Strompreis** wird zur Laufzeit unter
+`localStorage['cupra_ladetagebuch_price']` gehalten und ist über die
+Einstellungs-Card in der App editierbar. Neue Einträge bekommen den
+aktuellen Preis als eigenes `price`-Feld; alte Einträge behalten ihren
+Preis vom Erfassungs-Zeitpunkt — die Abrechnungs-Historie bleibt damit
+korrekt, wenn der Vermieter den Preis ändert.
 
 **Ladeverlust:** Marco lädt zuhause immer mit dem Maximum (Auto-Setting
 "10 A", real 9,6 A × 230 V ≈ 2,2 kW). Der Default-Verlust ist deshalb
@@ -108,19 +115,22 @@ Ein Eintrag in `sessions[]`:
   kwh: 5.612,                    // Brutto-kWh (NOVKIT-Wert / SOC-Hochrechnung), 3 Nachkommastellen
   label: "21% → 49%",            // oder "5.60 kWh (direkt)"
   meta: "~2.2 kW · 15% Verlust", // oder "Direkteingabe · 15% Verlust"
-  loss: 15                       // Verlust-% für diesen Eintrag (für €-Verlust- und Netto-Preis-Anzeige)
+  loss: 15,                      // Verlust-% für diesen Eintrag (für €-Verlust- und Netto-Preis-Anzeige)
+  price: 0.38                    // €/kWh, der zu diesem Zeitpunkt galt
 }
 ```
 
 Reihenfolge: neueste zuerst (`unshift`). Import unterstützt zwei Formate:
 ein nacktes Array oder `{ eintraege: [...], version: 1 }`. Alte Einträge
-ohne `loss`-Field werden in `load()` migriert (aus `meta` geparst, sonst
-Default 15 %).
+werden in `load()` migriert: fehlendes `loss` wird aus `meta` geparst
+(sonst Default 15 %), fehlendes `price` wird auf `DEFAULT_PRICE` (0.38)
+gesetzt — das war der Wert, der vor Einführung des editierbaren Preises
+galt.
 
-Aus `loss` werden zwei Werte pro Eintrag abgeleitet:
-- **Verlust in €**: `kwh × PRICE × loss/100` — wie viel des Preises auf
+Aus `loss` und `price` werden zwei Werte pro Eintrag abgeleitet:
+- **Verlust in €**: `kwh × price × loss/100` — wie viel des Preises auf
   den Ladeverlust entfällt
-- **Netto-Preis €/kWh**: `PRICE / (1 − loss/100)` — was 1 kWh **im Akku**
+- **Netto-Preis €/kWh**: `price / (1 − loss/100)` — was 1 kWh **im Akku**
   effektiv kostet. Vergleichswert zu öffentlichen Ladestationen (z. B.
   11 kW-Lader mit ~5 % Verlust haben einen niedrigeren Wert pro Brutto-kWh,
   aber einen anderen Netto-Preis je nach deren Verlust).

@@ -117,6 +117,7 @@
   .session-kwh { font-size: 15px; font-weight: 500; font-family: var(--font-mono); }
   .session-cost { font-size: 13px; font-family: var(--font-mono); color: var(--accent); }
   .session-loss, .session-effective { font-size: 10px; color: var(--text3); font-family: var(--font-mono); margin-top: 2px; }
+  .hint { font-size: 11px; color: var(--text3); font-family: var(--font-mono); line-height: 1.4; margin-top: 8px; }
   .btn-del { background: transparent; border: 0.5px solid var(--border); border-radius: 6px; color: var(--text3); font-size: 14px; padding: 4px 8px; cursor: pointer; -webkit-appearance: none; }
   .btn-del:active { color: var(--danger); border-color: var(--danger); }
 
@@ -239,23 +240,41 @@
   </div>
 </div>
 
+<div class="section">
+  <div class="card">
+    <div class="card-title">Einstellungen</div>
+    <div class="form-group full">
+      <label>Strompreis (€/kWh)</label>
+      <input type="number" id="price-input" min="0" step="0.001" />
+    </div>
+    <div class="hint">Gilt nur für neue Einträge. Bestehende behalten ihren Preis vom Erfassungs-Zeitpunkt.</div>
+    <button class="btn-ghost" onclick="savePrice()" style="margin-top:12px;">Preis speichern</button>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
-const PRICE = 0.38;
+const DEFAULT_PRICE = 0.38;
 const NET_KWH = 19.7;
 const STORE_KEY = 'cupra_ladetagebuch_v1';
+const PRICE_KEY = 'cupra_ladetagebuch_price';
 let sessions = [];
 let currentMode = 'soc';
+let currentPrice = DEFAULT_PRICE;
 
 function load() {
   try { const r = localStorage.getItem(STORE_KEY); if (r) sessions = JSON.parse(r); } catch(e) { sessions = []; }
-  // Migration: alten Einträgen ein loss-Feld nachziehen (aus meta parsen, sonst 15 %)
+  // Migration: alten Einträgen loss- und price-Feld nachziehen
   let dirty = false;
   for (const s of sessions) {
     if (typeof s.loss !== 'number') {
       const m = (s.meta || '').match(/(\d+)\s*%\s*Verlust/);
       s.loss = m ? parseInt(m[1], 10) : 15;
+      dirty = true;
+    }
+    if (typeof s.price !== 'number') {
+      s.price = DEFAULT_PRICE;
       dirty = true;
     }
   }
@@ -265,8 +284,28 @@ function save() {
   try { localStorage.setItem(STORE_KEY, JSON.stringify(sessions)); } catch(e) {}
 }
 
-function lossCost(kwh, loss) { return kwh * PRICE * (loss / 100); }
-function effectivePrice(loss) { return PRICE / (1 - loss / 100); }
+function loadPrice() {
+  try {
+    const r = localStorage.getItem(PRICE_KEY);
+    if (r) {
+      const p = parseFloat(r);
+      if (!isNaN(p) && p > 0) currentPrice = p;
+    }
+  } catch(e) {}
+}
+
+function savePrice() {
+  const p = parseFloat(document.getElementById('price-input').value);
+  if (isNaN(p) || p <= 0) { showToast('Ungültiger Preis'); return; }
+  currentPrice = p;
+  try { localStorage.setItem(PRICE_KEY, String(p)); } catch(e) {}
+  renderAll();
+  updatePreview();
+  showToast('Strompreis gespeichert ✓');
+}
+
+function lossCost(kwh, loss, price) { return kwh * price * (loss / 100); }
+function effectivePrice(loss, price) { return price / (1 - loss / 100); }
 
 function setMode(mode) {
   currentMode = mode;
@@ -291,21 +330,21 @@ function calcKwh(start, end, loss) {
 function updatePreview() {
   const box = document.getElementById('preview');
   const loss = getLoss();
-  const eff = effectivePrice(loss);
+  const eff = effectivePrice(loss, currentPrice);
   if (currentMode === 'soc') {
     const s = parseFloat(document.getElementById('soc-start').value);
     const e = parseFloat(document.getElementById('soc-end').value);
     if (!isNaN(s) && !isNaN(e) && e > s && s >= 0 && e <= 100) {
       const kwh = calcKwh(s, e, loss);
-      const lossE = lossCost(kwh, loss);
-      box.innerHTML = `<span class="preview-kwh">${kwh.toFixed(2)} kWh</span>&nbsp;·&nbsp;${(kwh * PRICE).toFixed(2)} €&nbsp;·&nbsp;${loss}% Verlust (${lossE.toFixed(2)} €)&nbsp;·&nbsp;${eff.toFixed(2)} €/kWh netto`;
+      const lossE = lossCost(kwh, loss, currentPrice);
+      box.innerHTML = `<span class="preview-kwh">${kwh.toFixed(2)} kWh</span>&nbsp;·&nbsp;${(kwh * currentPrice).toFixed(2)} €&nbsp;·&nbsp;${loss}% Verlust (${lossE.toFixed(2)} €)&nbsp;·&nbsp;${eff.toFixed(2)} €/kWh netto`;
       box.classList.add('active');
     } else resetPreview();
   } else {
     const k = parseFloat(document.getElementById('kwh-direct').value);
     if (!isNaN(k) && k > 0) {
-      const lossE = lossCost(k, loss);
-      box.innerHTML = `<span class="preview-kwh">${k.toFixed(2)} kWh</span>&nbsp;·&nbsp;${(k * PRICE).toFixed(2)} €&nbsp;·&nbsp;davon ${lossE.toFixed(2)} € Verlust&nbsp;·&nbsp;${eff.toFixed(2)} €/kWh netto`;
+      const lossE = lossCost(k, loss, currentPrice);
+      box.innerHTML = `<span class="preview-kwh">${k.toFixed(2)} kWh</span>&nbsp;·&nbsp;${(k * currentPrice).toFixed(2)} €&nbsp;·&nbsp;davon ${lossE.toFixed(2)} € Verlust&nbsp;·&nbsp;${eff.toFixed(2)} €/kWh netto`;
       box.classList.add('active');
     } else resetPreview();
   }
@@ -340,7 +379,7 @@ function addSession() {
     document.getElementById('kwh-direct').value = '';
   }
 
-  sessions.unshift({ id: Date.now(), date, kwh, label, meta, loss });
+  sessions.unshift({ id: Date.now(), date, kwh, label, meta, loss, price: currentPrice });
   save();
   renderAll();
   resetPreview();
@@ -356,27 +395,28 @@ function removeSession(id) {
 
 function renderAll() {
   const totalKwh = sessions.reduce((a, s) => a + s.kwh, 0);
+  const totalCost = sessions.reduce((a, s) => a + s.kwh * s.price, 0);
   document.getElementById('stat-kwh').textContent = totalKwh.toFixed(2);
-  document.getElementById('stat-cost').textContent = (totalKwh * PRICE).toFixed(2);
+  document.getElementById('stat-cost').textContent = totalCost.toFixed(2);
   document.getElementById('stat-count').textContent = sessions.length;
 
   const list = document.getElementById('sessions-list');
   if (sessions.length === 0) { list.innerHTML = '<div class="empty-state">Noch keine Ladungen eingetragen.</div>'; return; }
   list.innerHTML = sessions.map(s => {
     const loss = s.loss;
-    const lossE = lossCost(s.kwh, loss);
-    const eff = effectivePrice(loss);
+    const lossE = lossCost(s.kwh, loss, s.price);
+    const eff = effectivePrice(loss, s.price);
     return `
     <div class="session-item">
       <div class="session-left">
         <div class="session-date">${s.date}</div>
         <div class="session-soc">${s.label}</div>
-        <div class="session-meta">${s.meta}</div>
+        <div class="session-meta">${s.meta} · ${s.price.toFixed(3)} €/kWh</div>
       </div>
       <div class="session-right">
         <div>
           <div class="session-kwh">${s.kwh.toFixed(2)} kWh</div>
-          <div class="session-cost">${(s.kwh * PRICE).toFixed(2)} €</div>
+          <div class="session-cost">${(s.kwh * s.price).toFixed(2)} €</div>
           <div class="session-loss">davon ${lossE.toFixed(2)} € Verlust</div>
           <div class="session-effective">${eff.toFixed(2)} €/kWh netto</div>
         </div>
@@ -460,9 +500,10 @@ function importFromFile(event) {
 function exportCSV() {
   if (sessions.length === 0) { showToast('Keine Daten'); return; }
   const totalKwh = sessions.reduce((a, s) => a + s.kwh, 0);
-  let csv = 'Datum,Beschreibung,Details,kWh,Kosten EUR\n';
-  sessions.forEach(s => { csv += `${s.date},"${s.label}","${s.meta}",${s.kwh.toFixed(3)},${(s.kwh * PRICE).toFixed(2)}\n`; });
-  csv += `\nGesamt,,,${totalKwh.toFixed(3)},${(totalKwh * PRICE).toFixed(2)}\n`;
+  const totalCost = sessions.reduce((a, s) => a + s.kwh * s.price, 0);
+  let csv = 'Datum,Beschreibung,Details,kWh,Preis EUR/kWh,Kosten EUR\n';
+  sessions.forEach(s => { csv += `${s.date},"${s.label}","${s.meta}",${s.kwh.toFixed(3)},${s.price.toFixed(3)},${(s.kwh * s.price).toFixed(2)}\n`; });
+  csv += `\nGesamt,,,${totalKwh.toFixed(3)},,${totalCost.toFixed(2)}\n`;
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
   if (navigator.share) {
     const file = new File([blob], 'ladetagebuch.csv', { type: 'text/csv' });
@@ -491,8 +532,9 @@ function checkInstallBanner() {
   }
 }
 
-load(); renderAll();
+load(); loadPrice(); renderAll();
 document.getElementById('input-date').value = today();
+document.getElementById('price-input').value = currentPrice.toFixed(3);
 checkInstallBanner();
 
 // ─── Service Worker (Offline-Cache) ───────────────────────
