@@ -193,7 +193,7 @@
       <div class="form-group" id="group-power">
         <label>App zeigt</label>
         <select id="power-select" onchange="updateLoss()">
-          <option value="10">~2.0 kW (10A)</option>
+          <option value="10">~2.2 kW (10A)</option>
           <option value="8">~1.6 kW (8A)</option>
           <option value="6">~1.0 kW (6A)</option>
         </select>
@@ -325,7 +325,7 @@ function addSession() {
     if (isNaN(s) || isNaN(e) || e <= s || s < 0 || e > 100) { showToast('SOC-Werte prüfen!'); return; }
     const a = document.getElementById('power-select').value;
     const loss = getLoss();
-    const powerLabel = a === '10' ? '~2.0 kW' : a === '8' ? '~1.6 kW' : '~1.0 kW';
+    const powerLabel = a === '10' ? '~2.2 kW' : a === '8' ? '~1.6 kW' : '~1.0 kW';
     kwh = parseFloat(calcKwh(s, e, loss).toFixed(3));
     label = s + '% → ' + e + '%';
     meta = powerLabel + ' · ' + loss + '% Verlust';
