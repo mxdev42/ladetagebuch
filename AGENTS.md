@@ -94,9 +94,11 @@ Slider (8–25 %) manuell übersteuert werden. Frühere Mehrstufen-Logik
 (`LOSS_BY_A` für 10/8/6 A) wurde entfernt, weil nur eine Stufe genutzt
 wird.
 
-Messungen, die den 16-%-Wert stützen (Mittelwert):
+Messungen, die den 16-%-Wert stützen (Mittelwert; nach Brutto-kWh
+gewichtet ≈ 16,2 %, einfacher Mittelwert 16,5 %):
 - 2026-05-14: 13,89 kWh für 17→77 % SOC → 14,9 % Verlust (saubere Einzelmessung bei 2,2 kW)
 - 2026-05-16: 3,591 kWh für 64→80 % SOC → 17,7 % Verlust (gemischt 1 + 2 kW)
+- 2026-05-19: 15,89 kWh für 29→51 % + 35→80 % SOC (Σ 67 %) → 16,9 % Verlust (zwei aufeinanderfolgende Ladungen bei ~2,2 kW / 10 A)
 
 Formel zur kWh-Berechnung aus SOC-Differenz:
 
