@@ -218,9 +218,9 @@
       <div class="loss-row">
         <div class="loss-header">
           <span class="loss-label">OBC Ladeverlust</span>
-          <span class="loss-value" id="loss-display">15%</span>
+          <span class="loss-value" id="loss-display">16%</span>
         </div>
-        <input type="range" id="loss-slider" min="8" max="25" step="1" value="15" oninput="onSlider()" />
+        <input type="range" id="loss-slider" min="8" max="25" step="1" value="16" oninput="onSlider()" />
         <div class="range-hints"><span>8% schnell</span><span>25% langsam</span></div>
       </div>
     </div>
@@ -281,7 +281,7 @@ function migrateEntries(entries) {
   for (const s of entries) {
     if (typeof s.loss !== 'number') {
       const m = (s.meta || '').match(/(\d+)\s*%\s*Verlust/);
-      s.loss = m ? parseInt(m[1], 10) : 15;
+      s.loss = m ? parseInt(m[1], 10) : 16;
       dirty = true;
     }
     if (typeof s.price !== 'number') {

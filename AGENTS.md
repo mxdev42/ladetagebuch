@@ -89,14 +89,14 @@ korrekt, wenn der Vermieter den Preis ändert.
 
 **Ladeverlust:** Marco lädt zuhause immer mit dem Maximum (Auto-Setting
 "10 A", real 9,6 A × 230 V ≈ 2,2 kW). Der Default-Verlust ist deshalb
-fest auf 15 % gesetzt (Slider-Startwert in `index.html`), kann aber per
+fest auf 16 % gesetzt (Slider-Startwert in `index.html`), kann aber per
 Slider (8–25 %) manuell übersteuert werden. Frühere Mehrstufen-Logik
 (`LOSS_BY_A` für 10/8/6 A) wurde entfernt, weil nur eine Stufe genutzt
 wird.
 
-Messungen, die den 15-%-Wert stützen:
+Messungen, die den 16-%-Wert stützen (Mittelwert):
 - 2026-05-14: 13,89 kWh für 17→77 % SOC → 14,9 % Verlust (saubere Einzelmessung bei 2,2 kW)
-- 2026-05-16: 3,591 kWh für 64→80 % SOC → 17,7 % Verlust (gemischt 1 + 2 kW; konsistent mit 15 % bei 2,2 kW)
+- 2026-05-16: 3,591 kWh für 64→80 % SOC → 17,7 % Verlust (gemischt 1 + 2 kW)
 
 Formel zur kWh-Berechnung aus SOC-Differenz:
 
@@ -116,11 +116,11 @@ Es gibt zwei Eintrags-Typen, unterschieden durch das Feld `socStart`:
   date: "2026-05-12",            // YYYY-MM-DD
   socStart: 21,                  // SOC % am Anfang
   socEnd: 49,                    // SOC % am Ende
-  loss: 15,                      // Verlust-%
+  loss: 16,                      // Verlust-%
   price: 0.38,                   // €/kWh
-  kwh: 5.612,                    // abgeleitet: NET_KWH·(socEnd−socStart)/100/(1−loss/100)
+  kwh: 5.679,                    // abgeleitet: NET_KWH·(socEnd−socStart)/100/(1−loss/100)
   label: "21% → 49%",            // abgeleitet aus socStart/socEnd
-  meta: "~2.2 kW · 15% Verlust"  // abgeleitet aus loss
+  meta: "~2.2 kW · 16% Verlust"  // abgeleitet aus loss
 }
 ```
 
@@ -131,10 +131,10 @@ Es gibt zwei Eintrags-Typen, unterschieden durch das Feld `socStart`:
   id: 1715500000000,
   date: "2026-05-12",
   kwh: 5.612,                       // Source of Truth
-  loss: 15,                         // nur für €-Verlust- und Netto-Preis-Anzeige
+  loss: 16,                         // nur für €-Verlust- und Netto-Preis-Anzeige
   price: 0.38,
   label: "5.61 kWh (direkt)",       // abgeleitet aus kwh
-  meta: "Direkteingabe · 15% Verlust" // abgeleitet aus loss
+  meta: "Direkteingabe · 16% Verlust" // abgeleitet aus loss
 }
 ```
 
@@ -150,7 +150,7 @@ ist die Wahrheit für die Abrechnung.
 Reihenfolge: neueste zuerst (`unshift`). Import unterstützt zwei Formate:
 ein nacktes Array oder `{ eintraege: [...], version: 1 }`. Alte Einträge
 werden in `load()` migriert:
-- fehlendes `loss` → aus `meta` geparst, sonst 15 %
+- fehlendes `loss` → aus `meta` geparst, sonst 16 %
 - fehlendes `price` → `DEFAULT_PRICE` (0.38)
 - fehlendes `socStart`/`socEnd` → aus Label "X% → Y%" geparst (nur SOC-Einträge;
   Direkt-Einträge bleiben ohne socStart/socEnd)
