@@ -94,11 +94,16 @@ Slider (8–25 %) manuell übersteuert werden. Frühere Mehrstufen-Logik
 (`LOSS_BY_A` für 10/8/6 A) wurde entfernt, weil nur eine Stufe genutzt
 wird.
 
-17 % liegt über dem rechnerischen Mittelwert der Messungen (gewichtet
-nach Brutto-kWh ≈ 16,0 %, Streuung 14,9–17,7 %). Bewusst konservativ
-gewählt: bei SOC-Hochrechnung schätzt die App damit Brutto-kWh eher
-leicht zu hoch als zu niedrig — das ist für die Abrechnung mit dem
-Vermieter das sichere Vorzeichen.
+17 % liegt deutlich über dem rechnerischen Mittelwert der Messungen
+(gewichtet nach Brutto-kWh ≈ 15,9 %, Streuung 14,9–17,7 %). Bewusst
+konservativ gewählt: bei SOC-Hochrechnung schätzt die App damit
+Brutto-kWh eher zu hoch als zu niedrig — das ist für die Abrechnung
+mit dem Vermieter das sichere Vorzeichen.
+
+Muster in den Messungen: Charges, die bei ≤80 % SOC enden (rein
+CC-Phase), liegen bei ~15 % Verlust; Charges, die bis 100 % gehen
+(CV-Phase oberhalb ~80 % reduziert Strom), bzw. mehrteilige Charges
+liegen bei ~17 %.
 
 Messungen:
 - 2026-05-14: 13,89 kWh für 17→77 % SOC → 14,9 % Verlust (saubere Einzelmessung bei 2,2 kW)
@@ -106,6 +111,7 @@ Messungen:
 - 2026-05-19: 15,89 kWh für 29→51 % + 35→80 % SOC (Σ 67 %) → 16,9 % Verlust (zwei aufeinanderfolgende Ladungen bei ~2,2 kW / 10 A)
 - 2026-05-26: 3,94 kWh für 63→80 % SOC → 15,0 % Verlust (saubere Einzelmessung bei ~2,2 kW)
 - 2026-05-26: 9,932 kWh für 58→100 % SOC → 16,7 % Verlust (erste Messung bis 100 %; CV-Phase oberhalb ~80 % reduziert Strom → höherer Relativverlust)
+- 2026-05-26: 15,56 kWh für 13→80 % SOC → 15,2 % Verlust (saubere Einzelmessung, reine CC-Phase bei ~2,2 kW)
 
 Formel zur kWh-Berechnung aus SOC-Differenz:
 
