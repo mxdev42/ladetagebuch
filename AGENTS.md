@@ -33,6 +33,7 @@ fonts/*.woff2           ← Syne + DM Mono, lokal (Offline-fähig)
 .nojekyll               ← schaltet Jekyll auf GitHub Pages ab
 LICENSE                 ← MIT (App-Code)
 fonts/LICENSE           ← SIL OFL 1.1 (Syne + DM Mono)
+test/*.js               ← headless-Tests (deno, nur Entwicklung)
 AGENTS.md               ← diese Datei (CLAUDE.md ist ein Symlink darauf)
 README.md               ← Kurz-Einstieg, verweist hierher
 ```
@@ -262,9 +263,12 @@ fragen") gültig.
   für domänenspezifische Begriffe (`eintraege`, `Ladung`, `Verlust`) auf
   Deutsch halten. Technische Bezeichner wie `sessions`/`kwh` bleiben englisch
   — bestehender Stil.
-- **Keine externen Dependencies.** Keine npm-Pakete, keine CDN-Frameworks,
-  keine externen Fonts/Skripte zur Laufzeit — alles liegt im Repo, damit
-  die App offline ohne Netz läuft.
+- **Keine externen Dependencies zur Laufzeit.** Keine npm-Pakete, keine
+  CDN-Frameworks, keine externen Fonts/Skripte — alles liegt im Repo, damit
+  die App offline ohne Netz läuft. Ausgenommen sind reine
+  Entwicklungswerkzeuge, die nie ausgeliefert werden (`test/*.js` braucht
+  `deno` und `deno-dom`); sie stehen nicht in `ASSETS[]` und werden von der
+  App nicht geladen.
 - **Mobile-first.** Primäres Zielgerät ist iPhone im Standalone-Modus.
   Touch-Targets ≥ 40 px, `env(safe-area-inset-*)` beachten.
 - **Eingabefelder ≥ 16 px Schriftgröße.** Darunter zoomt Safari beim
@@ -286,7 +290,9 @@ fragen") gültig.
 
 ## Testen
 
-Es gibt keine Test-Suite. Manueller Smoke-Test ist Pflicht:
+Für die Domänenlogik gibt es headless-Tests (siehe unten). Sie decken aber
+nur die Rechen- und Datenpfade ab — der manuelle Smoke-Test im Browser
+bleibt Pflicht:
 
 1. `python3 -m http.server 8000` im Repo-Root
 2. http://localhost:8000 öffnen
@@ -312,11 +318,34 @@ Bei UI-Änderungen Browser-DevTools im Mobile-Viewport (iPhone) nutzen.
 
 ### Domänenlogik headless testen
 
-Die Logik im `<script>`-Block lässt sich ohne Browser prüfen, indem man sie
-aus `index.html` herausschneidet und mit einem DOM-Stub in `deno` lädt (die
-SW-Registrierung am Ende vorher abschneiden). Damit sind `migrateEntries()`,
-`calcKwh()`, `esc()` und die CSV-Helfer direkt testbar. Kein Ersatz für den
-Smoke-Test oben, aber gut für Änderungen an der Migration.
+Im Repo liegen zwei Testskripte. Sie brauchen `deno` (und beim ersten Lauf
+Netz für `deno-dom`) — das ist ein reines Entwicklungswerkzeug, die App
+selbst bleibt dependency-frei:
+
+```bash
+deno run --allow-read --allow-net test/smoke.js    # Punkte 3–11 der Checkliste
+deno run --allow-read test/sw-test.js              # fetch-Strategie des SW
+```
+
+`test/smoke.js` lädt das echte `index.html` in ein DOM, führt den echten
+`<script>`-Block aus und ruft die Handler direkt auf: Vorschau, Speichern,
+Reload, Bearbeiten, Preiswechsel, Löschen, CSV, JSON-Roundtrip.
+`test/sw-test.js` prüft `sw.js` gegen Stubs, unter anderem dass eine 404
+**nicht** in den Cache wandert.
+
+Beide beenden sich mit Exit-Code 1, wenn etwas fehlschlägt.
+
+Zwei Fallstricke, falls du daran arbeitest:
+
+- **Deno hat ein eingebautes, plattenpersistentes `localStorage`** — es ist
+  ein Getter, eine einfache Zuweisung wird stillschweigend ignoriert und der
+  Test läuft dann auf Daten des vorigen Laufs. `Object.defineProperty` ist
+  Pflicht.
+- **deno-dom kennt `input.value` nicht als Property.** Der Harness mappt es
+  in `boot()` auf das Attribut.
+
+Das ersetzt den Browser-Test **nicht**: keine Layout-Engine, keine echten
+Events, kein Service Worker im Betrieb.
 
 ## Aufgaben, die typischerweise auf dich zukommen
 
