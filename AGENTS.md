@@ -104,18 +104,29 @@ Frühere Mehrstufen-Logik (`LOSS_BY_A` für 10/8/6 A) wurde entfernt, weil
 nur eine Stufe genutzt wird.
 
 16 % entspricht dem gewichteten Mittelwert der Messungen (nach
-Brutto-kWh ≈ 15,9 %, Streuung 14,9–17,7 %). Muster in den Messungen:
-Charges, die bei ≤80 % SOC enden (rein CC-Phase), liegen bei ~15 %
-Verlust; Charges, die bis 100 % gehen (CV-Phase oberhalb ~80 %
-reduziert Strom), bzw. mehrteilige Charges liegen bei ~17 %.
+Brutto-kWh **15,83 %** über 59,2 kWh, Streuung 14,9–16,9 %). Muster in
+den Messungen: Charges, die bei ≤80 % SOC enden und einteilig sind
+(reine CC-Phase), liegen gewichtet bei **15,0 %** Verlust; Charges, die
+bis 100 % gehen (CV-Phase oberhalb ~80 % reduziert den Strom), bzw.
+mehrteilige Charges liegen bei **~17 %**.
 
 Messungen (Verlust = 1 − NET_KWH · ΔSOC/100 / Brutto-kWh):
 - 2026-05-14: 13,89 kWh für 17→77 % SOC → 14,9 % Verlust (saubere Einzelmessung bei 2,2 kW)
-- 2026-05-16: **⚠ unklar** — dokumentiert als 3,591 kWh für 64→80 % SOC → 17,7 % Verlust (gemischt 1 + 2 kW). Die beiden Zahlen passen nicht zusammen: 3,591 kWh bei 16 % SOC ergibt **12,2 %**, für 17,7 % müssten es **3,83 kWh** sein. Der Verlustwert 17,7 % ist der plausiblere von beiden — nur mit ihm kommt der unten genannte gewichtete Mittelwert von 15,9 % raus (mit 3,591 wären es 15,6 %). Vermutlich ein Tippfehler bei der Brutto-kWh. **Vor der nächsten Kalibrierung gegen die Original-Notiz prüfen.**
 - 2026-05-19: 15,89 kWh für 29→51 % + 35→80 % SOC (Σ 67 %) → 16,9 % Verlust (zwei aufeinanderfolgende Ladungen bei ~2,2 kW / 10 A)
 - 2026-05-26: 3,94 kWh für 63→80 % SOC → 15,0 % Verlust (saubere Einzelmessung bei ~2,2 kW)
 - 2026-05-26: 9,932 kWh für 58→100 % SOC → 16,7 % Verlust (erste Messung bis 100 %; CV-Phase oberhalb ~80 % reduziert Strom → höherer Relativverlust)
 - 2026-05-26: 15,56 kWh für 13→80 % SOC → 15,2 % Verlust (saubere Einzelmessung, reine CC-Phase bei ~2,2 kW)
+
+**Zurückgezogen — nicht wieder aufnehmen:** Eine Messung vom 2026-05-16
+stand hier als "3,591 kWh für 64→80 % SOC → 17,7 % Verlust (gemischt
+1 + 2 kW)". Die beiden Zahlen widersprechen sich: 3,591 kWh bei 16 % SOC
+ergeben 12,2 %, für 17,7 % müssten es 3,83 kWh gewesen sein. Welche der
+beiden Angaben der Tippfehler war, ist nicht mehr rekonstruierbar (keine
+Original-Notiz), und es war ohnehin der einzige Datenpunkt mit gemischter
+Ladeleistung — also der methodisch schwächste. Deshalb aus der
+Kalibriergrundlage entfernt statt geraten. Falls sie in einem alten Stand
+oder in der Git-Historie auftaucht: bewusste Entscheidung, nicht
+versehentlich verloren.
 
 Formel zur kWh-Berechnung aus SOC-Differenz:
 
