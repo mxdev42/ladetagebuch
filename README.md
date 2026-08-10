@@ -18,3 +18,10 @@ python3 -m http.server 8000
 ```
 
 `file://` funktioniert nicht — Service Worker brauchen HTTP(S).
+
+## Lizenz
+
+App-Code: [MIT](LICENSE).
+
+Die Schriften in `fonts/` (Syne, DM Mono) stehen unter der SIL Open Font
+License 1.1 — siehe [fonts/LICENSE](fonts/LICENSE).

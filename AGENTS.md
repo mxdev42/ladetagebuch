@@ -31,6 +31,8 @@ icon-512.png            ← Manifest-Icon + Splash (maskable)
 apple-touch-icon.png    ← 180×180 für iOS-Homescreen
 fonts/*.woff2           ← Syne + DM Mono, lokal (Offline-fähig)
 .nojekyll               ← schaltet Jekyll auf GitHub Pages ab
+LICENSE                 ← MIT (App-Code)
+fonts/LICENSE           ← SIL OFL 1.1 (Syne + DM Mono)
 AGENTS.md               ← diese Datei (CLAUDE.md ist ein Symlink darauf)
 README.md               ← Kurz-Einstieg, verweist hierher
 ```
@@ -357,3 +359,18 @@ curl -sSL -H "User-Agent: $UA" \
 
 Wenn sich danach Asset-Inhalte geändert haben, **`CACHE_VERSION` in
 `sw.js` hochzählen** — siehe "Offline-Strategie".
+
+## Lizenzen
+
+- **App-Code**: MIT, siehe `LICENSE` (Copyright Marco Bruch).
+- **Schriften in `fonts/`**: SIL Open Font License 1.1, siehe
+  `fonts/LICENSE`. Die Datei enthält die unveränderten Originaltexte von
+  Syne und DM Mono, geholt aus `google/fonts` (`ofl/syne/OFL.txt` bzw.
+  `ofl/dmmono/OFL.txt`).
+
+Die OFL verlangt, dass Copyright-Vermerk und Lizenztext bei jeder
+Weiterverbreitung mitgeliefert werden — das Repo ist öffentlich und
+liefert die WOFF2-Dateien über GitHub Pages aus, also gilt das hier.
+**Wenn du Fonts austauschst oder ergänzt, `fonts/LICENSE` mitpflegen.**
+Neue Laufzeit-Abhängigkeiten gibt es ohnehin keine (siehe Konventionen),
+also bleibt das der einzige Fremdlizenz-Fall.
