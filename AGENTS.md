@@ -31,6 +31,8 @@ icon-512.png            ← Manifest-Icon + Splash (maskable)
 apple-touch-icon.png    ← 180×180 für iOS-Homescreen
 fonts/*.woff2           ← Syne + DM Mono, lokal (Offline-fähig)
 .nojekyll               ← schaltet Jekyll auf GitHub Pages ab
+AGENTS.md               ← diese Datei (CLAUDE.md ist ein Symlink darauf)
+README.md               ← Kurz-Einstieg, verweist hierher
 ```
 
 **Live-Deployment:** https://mxdev42.github.io/ladetagebuch/ via
@@ -62,7 +64,12 @@ Persistenz:
 - **HTML / Navigation**: network-first mit Cache-Fallback. Online liegt
   also immer die neueste Version vor; offline wird der zuletzt gecachte
   Stand von `./index.html` ausgeliefert.
-- **Statische Assets** (Fonts, Icons, Manifest): cache-first.
+- **Statische Assets** (Fonts, Icons, Manifest): cache-first, ein Treffer
+  aus dem Netz wird nachgecacht.
+
+In beiden Fällen wird **nur bei `response.ok` gecacht**. Sonst landet eine
+404/502 von GitHub Pages (z. B. während eines Deploys) im Cache und wird
+offline dauerhaft statt der App ausgeliefert.
 
 **Update-Workflow für statische Assets**: Wenn du `sw.js` oder eine Datei
 aus `ASSETS[]` änderst, **zähle `CACHE_VERSION` hoch** (`v1` → `v2` …).
@@ -89,10 +96,12 @@ korrekt, wenn der Vermieter den Preis ändert.
 
 **Ladeverlust:** Marco lädt zuhause immer mit dem Maximum (Auto-Setting
 "10 A", real 9,6 A × 230 V ≈ 2,2 kW). Der Default-Verlust ist deshalb
-fest auf 16 % gesetzt (Slider-Startwert in `index.html`), kann aber per
-Slider (8–25 %) manuell übersteuert werden. Frühere Mehrstufen-Logik
-(`LOSS_BY_A` für 10/8/6 A) wurde entfernt, weil nur eine Stufe genutzt
-wird.
+fest auf 16 % gesetzt (`DEFAULT_LOSS` in `index.html`), kann aber per
+Slider (`LOSS_MIN` 8 – `LOSS_MAX` 25 %) manuell übersteuert werden.
+Der Slider gilt für **beide Eingabe-Modi**: im SOC-Modus geht er in die
+kWh-Berechnung ein, im kWh-Modus nur in Verlust-€ und Netto-Preis.
+Frühere Mehrstufen-Logik (`LOSS_BY_A` für 10/8/6 A) wurde entfernt, weil
+nur eine Stufe genutzt wird.
 
 16 % entspricht dem gewichteten Mittelwert der Messungen (nach
 Brutto-kWh ≈ 15,9 %, Streuung 14,9–17,7 %). Muster in den Messungen:
@@ -100,9 +109,9 @@ Charges, die bei ≤80 % SOC enden (rein CC-Phase), liegen bei ~15 %
 Verlust; Charges, die bis 100 % gehen (CV-Phase oberhalb ~80 %
 reduziert Strom), bzw. mehrteilige Charges liegen bei ~17 %.
 
-Messungen:
+Messungen (Verlust = 1 − NET_KWH · ΔSOC/100 / Brutto-kWh):
 - 2026-05-14: 13,89 kWh für 17→77 % SOC → 14,9 % Verlust (saubere Einzelmessung bei 2,2 kW)
-- 2026-05-16: 3,591 kWh für 64→80 % SOC → 17,7 % Verlust (gemischt 1 + 2 kW)
+- 2026-05-16: **⚠ unklar** — dokumentiert als 3,591 kWh für 64→80 % SOC → 17,7 % Verlust (gemischt 1 + 2 kW). Die beiden Zahlen passen nicht zusammen: 3,591 kWh bei 16 % SOC ergibt **12,2 %**, für 17,7 % müssten es **3,83 kWh** sein. Der Verlustwert 17,7 % ist der plausiblere von beiden — nur mit ihm kommt der unten genannte gewichtete Mittelwert von 15,9 % raus (mit 3,591 wären es 15,6 %). Vermutlich ein Tippfehler bei der Brutto-kWh. **Vor der nächsten Kalibrierung gegen die Original-Notiz prüfen.**
 - 2026-05-19: 15,89 kWh für 29→51 % + 35→80 % SOC (Σ 67 %) → 16,9 % Verlust (zwei aufeinanderfolgende Ladungen bei ~2,2 kW / 10 A)
 - 2026-05-26: 3,94 kWh für 63→80 % SOC → 15,0 % Verlust (saubere Einzelmessung bei ~2,2 kW)
 - 2026-05-26: 9,932 kWh für 58→100 % SOC → 16,7 % Verlust (erste Messung bis 100 %; CV-Phase oberhalb ~80 % reduziert Strom → höherer Relativverlust)
@@ -128,7 +137,7 @@ Es gibt zwei Eintrags-Typen, unterschieden durch das Feld `socStart`:
   socEnd: 49,                    // SOC % am Ende
   loss: 16,                      // Verlust-%
   price: 0.38,                   // €/kWh
-  kwh: 5.679,                    // abgeleitet: NET_KWH·(socEnd−socStart)/100/(1−loss/100)
+  kwh: 6.567,                    // abgeleitet: NET_KWH·(socEnd−socStart)/100/(1−loss/100)
   label: "21% → 49%",            // abgeleitet aus socStart/socEnd
   meta: "~2.2 kW · 16% Verlust"  // abgeleitet aus loss
 }
@@ -150,20 +159,62 @@ Es gibt zwei Eintrags-Typen, unterschieden durch das Feld `socStart`:
 
 `label`, `meta` und (bei SOC) `kwh` werden über die Helper-Funktion
 `refreshDerived(s)` aus den Source-of-Truth-Feldern berechnet — in
-`addSession` und `saveEdit` nach jeder Änderung.
+`addSession`, `saveEdit` und `migrateEntries` nach jeder Änderung.
 
 Editierbar pro Eintrag (über das ✎-Icon): `date`, `loss`, sowie
 `socStart`/`socEnd` (bei SOC-Einträgen) bzw. `kwh` (bei Direkt-Einträgen).
 `price` ist bewusst **nicht** editierbar — der gespeicherte Erfassungs-Preis
-ist die Wahrheit für die Abrechnung.
+ist die Wahrheit für die Abrechnung. Das Verlust-Feld im Edit-Dialog
+akzeptiert bewusst **0–50 %** statt der Slider-Grenzen 8–25, damit
+Alt-Einträge mit abweichendem Verlust editierbar bleiben.
 
-Reihenfolge: neueste zuerst (`unshift`). Import unterstützt zwei Formate:
-ein nacktes Array oder `{ eintraege: [...], version: 1 }`. Alte Einträge
-werden in `load()` migriert:
-- fehlendes `loss` → aus `meta` geparst, sonst 16 %
-- fehlendes `price` → `DEFAULT_PRICE` (0.38)
+Reihenfolge: neueste zuerst (`unshift`), sortiert wird nach `id`
+(= Erfassungszeitpunkt), **nicht** nach `date`. Ein nachträglich geändertes
+Datum sortiert die Liste also nicht um; der Merge-Import sortiert ebenfalls
+nach `id`.
+
+### Import / Export
+
+Import unterstützt zwei Formate: ein nacktes Array oder
+`{ eintraege: [...], version: 1 }`. Beide laufen vor dem Zusammenführen
+durch `migrateEntries()`.
+
+Export (JSON wie CSV) geht über `shareOrDownload()`: erst
+`navigator.canShare({files})` prüfen — Desktop-Chrome hat zwar
+`navigator.share`, aber oft kein File-Sharing —, dann das Share Sheet.
+Ein `AbortError` (Nutzer bricht das Sheet ab) gilt **nicht** als
+Fehlschlag, sonst lädt die Datei trotzdem ungefragt herunter.
+
+**CSV ist im deutschen Format**: Semikolon als Trenner, Komma als
+Dezimalzeichen, UTF-8-BOM voran. Sonst zerlegt Excel/Numbers mit
+DE-Regionaleinstellung die Datei falsch — und die CSV geht an den
+Vermieter.
+
+### `migrateEntries()` — Migration und Sanitizing
+
+Läuft in `load()` **und** nach `importFromFile()` und gibt ein neues,
+bereinigtes Array zurück (mutiert nicht nur in place):
+
+- fehlendes `loss` → aus `meta` geparst, sonst `DEFAULT_LOSS` (16 %);
+  anschließend auf 0–50 geklemmt, damit `calcKwh` nie durch ≤ 0 teilt
+- fehlendes/ungültiges `price` → `DEFAULT_PRICE` (0.38)
 - fehlendes `socStart`/`socEnd` → aus Label "X% → Y%" geparst (nur SOC-Einträge;
   Direkt-Einträge bleiben ohne socStart/socEnd)
+- fehlende/ungültige `id` → `nextId()`; unplausibles `date` → heute
+- **verworfen** werden Einträge, die weder ein gültiges SOC-Paar noch eine
+  positive `kwh`-Zahl haben, sowie alles, was kein Objekt ist
+- **`label`/`meta` werden immer über `refreshDerived()` neu erzeugt**, nie
+  aus der Datei übernommen — sie landen im `innerHTML` der Historie, und
+  eine manipulierte oder kaputte JSON darf da nichts einschleusen. Beim
+  Rendern zusätzlich `esc()` als zweite Absicherung.
+
+Nebeneffekt: Uralt-Einträge mit `meta: "10 A · 15% Verlust"` werden beim
+nächsten Laden auf `"~2.2 kW · 15% Verlust"` normalisiert. Der Verlust-%
+und damit die Abrechnung bleibt unberührt.
+
+Ein nicht-Array im `localStorage` (korrupter Storage) führt zu einer
+leeren Liste statt zu einem Absturz — vorher riss das den kompletten
+Init-Block mit, inklusive Service-Worker-Registrierung.
 
 Aus `loss` und `price` werden zwei Werte pro Eintrag abgeleitet:
 - **Verlust in €**: `kwh × price × loss/100` — wie viel des Preises auf
@@ -203,6 +254,14 @@ fragen") gültig.
   die App offline ohne Netz läuft.
 - **Mobile-first.** Primäres Zielgerät ist iPhone im Standalone-Modus.
   Touch-Targets ≥ 40 px, `env(safe-area-inset-*)` beachten.
+- **Eingabefelder ≥ 16 px Schriftgröße.** Darunter zoomt Safari beim
+  Fokussieren selbsttätig rein. Deshalb ist im Viewport-Meta *kein*
+  `user-scalable=no` gesetzt — Pinch-Zoom bleibt erlaubt.
+- **Kein ungeprüfter Fremd-String ins `innerHTML`.** Alles, was aus einer
+  importierten JSON stammt, wird entweder neu generiert oder durch `esc()`
+  geschickt.
+- **Destruktives braucht eine Rückfrage.** Löschen ist nicht rückgängig zu
+  machen, der einzige Undo wäre ein JSON-Backup.
 - **Storage-Migrationen.** Wenn sich das Eintragsschema ändert, den
   Storage-Key (`cupra_ladetagebuch_v1`) hochzählen oder im `load()` migrieren
   — nicht still neue Felder erwarten.
@@ -219,21 +278,32 @@ Es gibt keine Test-Suite. Manueller Smoke-Test ist Pflicht:
 1. `python3 -m http.server 8000` im Repo-Root
 2. http://localhost:8000 öffnen
 3. SOC-Modus: Werte eingeben → Vorschau muss kWh, €, Verlust-€ und Netto-€/kWh zeigen
-4. kWh-Modus: Direkteingabe testen
+4. kWh-Modus: Direkteingabe testen — der Verlust-Slider muss auch hier
+   sichtbar sein und Verlust-€ / Netto-Preis in der Vorschau verändern
 5. Eintrag speichern → Liste & Stats aktualisieren sich
 6. Reload → Eintrag bleibt (localStorage)
 7. **Eintrag bearbeiten (✎)**: Verlust ändern → Speichern → kWh und Verlust-€
    müssen sich neu berechnet haben (bei SOC-Einträgen)
 8. **Einstellungen**: Strompreis ändern → Speichern → Vorschau und neue
    Einträge nutzen den neuen Preis; alte Einträge behalten ihren
-9. CSV-Export und JSON-Export öffnen sich/laden runter
-10. JSON-Re-Import einer eigenen Export-Datei → Einträge erscheinen, alte
+9. **Löschen (✕)** → Rückfrage muss kommen; Abbrechen darf nichts löschen
+10. CSV-Export und JSON-Export öffnen sich/laden runter. CSV in Numbers/Excel
+    öffnen → Spalten müssen getrennt sein und die Zahlen als Zahlen ankommen
+11. JSON-Re-Import einer eigenen Export-Datei → Einträge erscheinen, alte
     Felder (`loss`, `price`, `socStart`/`socEnd`) werden via `migrateEntries()`
     nachgezogen
-11. **Offline-Check**: DevTools → Application → Service Workers → "Offline"
+12. **Offline-Check**: DevTools → Application → Service Workers → "Offline"
     anhaken, dann Reload — App muss vollständig funktionieren (inkl. Fonts).
 
 Bei UI-Änderungen Browser-DevTools im Mobile-Viewport (iPhone) nutzen.
+
+### Domänenlogik headless testen
+
+Die Logik im `<script>`-Block lässt sich ohne Browser prüfen, indem man sie
+aus `index.html` herausschneidet und mit einem DOM-Stub in `deno` lädt (die
+SW-Registrierung am Ende vorher abschneiden). Damit sind `migrateEntries()`,
+`calcKwh()`, `esc()` und die CSV-Helfer direkt testbar. Kein Ersatz für den
+Smoke-Test oben, aber gut für Änderungen an der Migration.
 
 ## Aufgaben, die typischerweise auf dich zukommen
 

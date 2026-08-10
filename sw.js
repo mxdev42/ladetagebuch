@@ -3,7 +3,7 @@
 //   - index.html: network-first (mit Cache-Fallback offline)
 //   - alle übrigen Assets: cache-first
 // Beim Update statischer Assets (Fonts/Icons/Manifest) CACHE_VERSION hochzählen.
-const CACHE_VERSION = 'v1';
+const CACHE_VERSION = 'v2';
 const CACHE_NAME = `ladetagebuch-${CACHE_VERSION}`;
 
 const ASSETS = [
@@ -55,15 +55,31 @@ self.addEventListener('fetch', (event) => {
   if (isHTML) {
     event.respondWith(
       fetch(request).then((response) => {
-        const copy = response.clone();
-        caches.open(CACHE_NAME).then((cache) => cache.put('./index.html', copy));
+        // Nur erfolgreiche Antworten cachen. Sonst landet eine 404/502 von
+        // GitHub Pages (z. B. während eines Deploys) im Cache und wird
+        // offline dauerhaft statt der App ausgeliefert.
+        if (response && response.ok) {
+          const copy = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put('./index.html', copy));
+        }
         return response;
       }).catch(() => caches.match('./index.html'))
     );
     return;
   }
 
+  // Statische Assets: cache-first, Treffer aus dem Netz nachcachen, damit
+  // eine Datei, die nicht im Precache steht, nicht bei jedem Aufruf neu lädt.
   event.respondWith(
-    caches.match(request).then((cached) => cached || fetch(request))
+    caches.match(request).then((cached) => {
+      if (cached) return cached;
+      return fetch(request).then((response) => {
+        if (response && response.ok) {
+          const copy = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
+        }
+        return response;
+      });
+    })
   );
 });

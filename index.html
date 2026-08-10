@@ -2,7 +2,10 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<!-- Kein maximum-scale/user-scalable=no: Pinch-Zoom bleibt erlaubt.
+     Damit Safari beim Fokussieren nicht selbst reinzoomt, sind alle
+     Eingabefelder auf >= 16px Schriftgröße gesetzt. -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Ladetagebuch">
@@ -74,7 +77,7 @@
 
   input[type="date"], input[type="number"], select {
     background: var(--bg3); border: 0.5px solid var(--border2); border-radius: var(--radius-sm);
-    color: var(--text); font-family: var(--font-mono); font-size: 15px;
+    color: var(--text); font-family: var(--font-mono); font-size: 16px;
     padding: 11px 12px; width: 100%; -webkit-appearance: none; appearance: none; outline: none;
     transition: border-color 0.15s;
   }
@@ -118,13 +121,14 @@
   .session-cost { font-size: 13px; font-family: var(--font-mono); color: var(--accent); }
   .session-loss, .session-effective { font-size: 10px; color: var(--text3); font-family: var(--font-mono); margin-top: 2px; }
   .hint { font-size: 11px; color: var(--text3); font-family: var(--font-mono); line-height: 1.4; margin-top: 8px; }
-  .btn-edit, .btn-del { background: transparent; border: 0.5px solid var(--border); border-radius: 6px; color: var(--text3); font-size: 14px; padding: 4px 8px; cursor: pointer; -webkit-appearance: none; }
+  /* Touch-Targets >= 40px (Konvention: mobile-first, iPhone im Standalone-Modus) */
+  .btn-edit, .btn-del { background: transparent; border: 0.5px solid var(--border); border-radius: 6px; color: var(--text3); font-size: 15px; min-width: 40px; min-height: 40px; display: flex; align-items: center; justify-content: center; padding: 0; cursor: pointer; -webkit-appearance: none; }
   .btn-edit:active { color: var(--accent); border-color: var(--accent); }
   .btn-del:active { color: var(--danger); border-color: var(--danger); }
   .session-edit { background: var(--bg3); border-radius: var(--radius-sm); padding: 12px; margin: 4px 0; border-bottom: 0.5px solid var(--border); }
   .session-edit:last-child { border-bottom: none; }
   .session-edit .form-row { margin-bottom: 8px; }
-  .session-edit input { font-size: 13px; padding: 8px 10px; }
+  .session-edit input { font-size: 16px; padding: 8px 10px; }
   .session-edit .edit-header { font-size: 11px; color: var(--text3); font-family: var(--font-mono); margin-bottom: 8px; }
   .edit-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 8px; }
   .edit-actions .btn-ghost { font-size: 11px; padding: 6px 12px; }
@@ -215,14 +219,6 @@
           <input type="number" id="soc-end" min="0" max="100" placeholder="z.B. 49" oninput="updatePreview()" />
         </div>
       </div>
-      <div class="loss-row">
-        <div class="loss-header">
-          <span class="loss-label">OBC Ladeverlust</span>
-          <span class="loss-value" id="loss-display">16%</span>
-        </div>
-        <input type="range" id="loss-slider" min="8" max="25" step="1" value="16" oninput="onSlider()" />
-        <div class="range-hints"><span>8% schnell</span><span>25% langsam</span></div>
-      </div>
     </div>
 
     <div id="kwh-inputs" class="hidden">
@@ -232,6 +228,17 @@
           <input type="number" id="kwh-direct" min="0" step="0.01" placeholder="z.B. 5.60" oninput="updatePreview()" />
         </div>
       </div>
+    </div>
+
+    <!-- Gilt für beide Modi: im SOC-Modus geht der Verlust in die kWh-Berechnung
+         ein, im kWh-Modus nur in Verlust-€ und Netto-Preis. -->
+    <div class="loss-row">
+      <div class="loss-header">
+        <span class="loss-label">OBC Ladeverlust</span>
+        <span class="loss-value" id="loss-display">16%</span>
+      </div>
+      <input type="range" id="loss-slider" min="8" max="25" step="1" value="16" oninput="onSlider()" />
+      <div class="range-hints"><span>8% schnell</span><span>25% langsam</span></div>
     </div>
 
     <div class="preview-box" id="preview">Werte eingeben für Vorschau …</div>
@@ -261,11 +268,14 @@
   </div>
 </div>
 
-<div class="toast" id="toast"></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script>
 const DEFAULT_PRICE = 0.38;
 const NET_KWH = 19.7;
+const DEFAULT_LOSS = 16;   // Slider-Startwert + Fallback der Migration
+const LOSS_MIN = 8;
+const LOSS_MAX = 25;
 const STORE_KEY = 'cupra_ladetagebuch_v1';
 const PRICE_KEY = 'cupra_ladetagebuch_price';
 let sessions = [];
@@ -273,38 +283,61 @@ let currentMode = 'soc';
 let currentPrice = DEFAULT_PRICE;
 let editingId = null;
 
-// Migration: alten Einträgen loss-, price- und socStart/socEnd-Felder nachziehen.
-// Wird bei load() UND nach importFromFile() aufgerufen, damit importierte
-// Alt-Daten nicht halb-migriert ins Rendering laufen.
+// Migration + Sanitizing: zieht alten Einträgen loss-, price- und
+// socStart/socEnd-Felder nach und wirft unbrauchbare Datensätze weg.
+// Wird bei load() UND nach importFromFile() aufgerufen.
+//
+// Wichtig: label/meta/kwh werden über refreshDerived() IMMER neu erzeugt,
+// nie aus der Datei übernommen. Sonst landet fremder Inhalt aus einer
+// manipulierten oder kaputten JSON ungeprüft im innerHTML der Historie.
+// Gibt ein neues, bereinigtes Array zurück.
 function migrateEntries(entries) {
-  let dirty = false;
+  if (!Array.isArray(entries)) return [];
+  const out = [];
   for (const s of entries) {
-    if (typeof s.loss !== 'number') {
-      const m = (s.meta || '').match(/(\d+)\s*%\s*Verlust/);
-      s.loss = m ? parseInt(m[1], 10) : 16;
-      dirty = true;
+    if (!s || typeof s !== 'object' || Array.isArray(s)) continue;
+
+    if (typeof s.loss !== 'number' || !isFinite(s.loss)) {
+      const m = (typeof s.meta === 'string' ? s.meta : '').match(/(\d+)\s*%\s*Verlust/);
+      s.loss = m ? parseInt(m[1], 10) : DEFAULT_LOSS;
     }
-    if (typeof s.price !== 'number') {
-      s.price = DEFAULT_PRICE;
-      dirty = true;
-    }
+    // Verlust muss < 100 bleiben, sonst dividiert calcKwh durch 0 oder negativ.
+    s.loss = Math.min(Math.max(Math.round(s.loss), 0), 50);
+
+    if (typeof s.price !== 'number' || !isFinite(s.price) || s.price <= 0) s.price = DEFAULT_PRICE;
+
     // SOC-Einträge erkennen am Label "X% → Y%" und Start/Ende extrahieren.
     // kWh-Direkt-Einträge ("X kWh (direkt)") bleiben ohne socStart/socEnd.
     if (typeof s.socStart !== 'number' && typeof s.socEnd !== 'number') {
-      const m = (s.label || '').match(/^(\d+)\s*%\s*(?:→|->)\s*(\d+)\s*%$/);
+      const m = (typeof s.label === 'string' ? s.label : '').match(/^(\d+)\s*%\s*(?:→|->)\s*(\d+)\s*%$/);
       if (m) {
         s.socStart = parseInt(m[1], 10);
         s.socEnd = parseInt(m[2], 10);
-        dirty = true;
       }
     }
+
+    // Ein Eintrag braucht entweder ein vollständiges SOC-Paar oder eine kWh-Zahl.
+    const isSoc = typeof s.socStart === 'number' && typeof s.socEnd === 'number'
+      && isFinite(s.socStart) && isFinite(s.socEnd) && s.socEnd > s.socStart;
+    if (!isSoc) {
+      delete s.socStart; delete s.socEnd;
+      if (typeof s.kwh !== 'number' || !isFinite(s.kwh) || s.kwh <= 0) continue;
+    }
+
+    if (typeof s.id !== 'number' || !isFinite(s.id)) s.id = nextId();
+    if (typeof s.date !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(s.date)) s.date = today();
+
+    refreshDerived(s);
+    out.push(s);
   }
-  return dirty;
+  return out;
 }
 
 function load() {
-  try { const r = localStorage.getItem(STORE_KEY); if (r) sessions = JSON.parse(r); } catch(e) { sessions = []; }
-  if (migrateEntries(sessions)) save();
+  let raw = null;
+  try { const r = localStorage.getItem(STORE_KEY); if (r) raw = JSON.parse(r); } catch(e) {}
+  sessions = migrateEntries(raw);
+  save();
 }
 function save() {
   try { localStorage.setItem(STORE_KEY, JSON.stringify(sessions)); } catch(e) {}
@@ -341,6 +374,7 @@ function refreshDerived(s) {
     s.label = s.socStart + '% → ' + s.socEnd + '%';
     s.meta = '~2.2 kW · ' + s.loss + '% Verlust';
   } else {
+    s.kwh = parseFloat(Number(s.kwh).toFixed(3));
     s.label = s.kwh.toFixed(2) + ' kWh (direkt)';
     s.meta = 'Direkteingabe · ' + s.loss + '% Verlust';
   }
@@ -352,10 +386,13 @@ function setMode(mode) {
   document.getElementById('btn-kwh').classList.toggle('active', mode === 'kwh');
   document.getElementById('soc-inputs').classList.toggle('hidden', mode !== 'soc');
   document.getElementById('kwh-inputs').classList.toggle('hidden', mode !== 'kwh');
-  resetPreview();
+  updatePreview();
 }
 
-function getLoss() { return parseInt(document.getElementById('loss-slider').value); }
+function getLoss() {
+  const v = parseInt(document.getElementById('loss-slider').value, 10);
+  return isNaN(v) ? DEFAULT_LOSS : Math.min(Math.max(v, LOSS_MIN), LOSS_MAX);
+}
 
 function onSlider() {
   document.getElementById('loss-display').textContent = getLoss() + '%';
@@ -404,14 +441,15 @@ function addSession() {
     const e = parseFloat(document.getElementById('soc-end').value);
     if (isNaN(s) || isNaN(e) || e <= s || s < 0 || e > 100) { showToast('SOC-Werte prüfen!'); return; }
     const loss = getLoss();
-    entry = { id: Date.now(), date, socStart: s, socEnd: e, loss, price: currentPrice };
+    entry = { id: nextId(), date, socStart: s, socEnd: e, loss, price: currentPrice };
     document.getElementById('soc-start').value = '';
     document.getElementById('soc-end').value = '';
   } else {
-    const kwh = parseFloat(parseFloat(document.getElementById('kwh-direct').value).toFixed(3));
-    if (isNaN(kwh) || kwh <= 0) { showToast('kWh-Wert prüfen!'); return; }
+    const raw = parseFloat(document.getElementById('kwh-direct').value);
+    if (isNaN(raw) || raw <= 0) { showToast('kWh-Wert prüfen!'); return; }
+    const kwh = parseFloat(raw.toFixed(3));
     const loss = getLoss();
-    entry = { id: Date.now(), date, kwh, loss, price: currentPrice };
+    entry = { id: nextId(), date, kwh, loss, price: currentPrice };
     document.getElementById('kwh-direct').value = '';
   }
   refreshDerived(entry);
@@ -423,6 +461,10 @@ function addSession() {
 }
 
 function removeSession(id) {
+  const s = sessions.find(x => x.id === id);
+  if (!s) return;
+  // Löschen ist nicht rückgängig zu machen und der Button sitzt direkt neben ✎.
+  if (!window.confirm(`Eintrag löschen?\n\n${s.date} · ${s.label}\n${s.kwh.toFixed(2)} kWh · ${(s.kwh * s.price).toFixed(2)} €`)) return;
   sessions = sessions.filter(s => s.id !== id);
   if (editingId === id) editingId = null;
   save();
@@ -480,9 +522,9 @@ function renderViewMode(s) {
   return `
     <div class="session-item">
       <div class="session-left">
-        <div class="session-date">${s.date}</div>
-        <div class="session-soc">${s.label}</div>
-        <div class="session-meta">${s.meta} · ${s.price.toFixed(3)} €/kWh</div>
+        <div class="session-date">${esc(s.date)}</div>
+        <div class="session-soc">${esc(s.label)}</div>
+        <div class="session-meta">${esc(s.meta)} · ${s.price.toFixed(3)} €/kWh</div>
       </div>
       <div class="session-right">
         <div>
@@ -524,7 +566,7 @@ function renderEditMode(s) {
       <div class="form-row">
         <div class="form-group">
           <label>Datum</label>
-          <input type="date" id="edit-date-${s.id}" value="${s.date}">
+          <input type="date" id="edit-date-${s.id}" value="${esc(s.date)}">
         </div>
         <div class="form-group">
           <label>Verlust %</label>
@@ -542,26 +584,31 @@ function renderEditMode(s) {
 
 // ─── iCloud Export ────────────────────────────────────────
 
+// Teilt die Datei über das iOS Share Sheet ("In Dateien sichern" → iCloud
+// Drive) und fällt sonst auf einen normalen Download zurück.
+// canShare() prüfen: Desktop-Chrome hat navigator.share, aber oft kein
+// File-Sharing. Bricht der Nutzer das Share Sheet ab, kommt ein AbortError —
+// der darf NICHT als Fehlschlag gelten, sonst lädt die Datei trotzdem runter.
+function shareOrDownload(blob, name, mime, okToast) {
+  const file = new File([blob], name, { type: mime });
+  if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    navigator.share({ files: [file] })
+      .then(() => showToast(okToast))
+      .catch((err) => {
+        if (err && err.name === 'AbortError') return;
+        triggerDownload(blob, name);
+        showToast('Heruntergeladen ✓');
+      });
+  } else {
+    triggerDownload(blob, name);
+    showToast('Heruntergeladen ✓');
+  }
+}
+
 function exportToiCloud() {
   const data = { eintraege: sessions, exportiert: new Date().toISOString(), version: 1 };
-  const json = JSON.stringify(data, null, 2);
-  const blob = new Blob([json], { type: 'application/json' });
-
-  // iOS Share Sheet via Web Share API
-  if (navigator.share) {
-    // Datei über Share Sheet teilen → "In Dateien sichern" → iCloud Drive
-    const file = new File([blob], 'ladetagebuch.json', { type: 'application/json' });
-    navigator.share({ files: [file] }).then(() => {
-      showToast('Gespeichert ✓');
-    }).catch(() => {
-      // Fallback: direkter Download
-      triggerDownload(blob, 'ladetagebuch.json');
-    });
-  } else {
-    // Desktop: direkter Download
-    triggerDownload(blob, 'ladetagebuch.json');
-    showToast('JSON heruntergeladen ✓');
-  }
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  shareOrDownload(blob, 'ladetagebuch.json', 'application/json', 'Gespeichert ✓');
 }
 
 function triggerDownload(blob, name) {
@@ -584,23 +631,28 @@ function importFromFile(event) {
       const eintraege = Array.isArray(data) ? data : (data.eintraege || []);
       if (!Array.isArray(eintraege)) throw new Error('Ungültiges Format');
 
-      const confirm = window.confirm(
-        eintraege.length + ' Einträge gefunden.\n\nVorhandene Daten ersetzen oder zusammenführen?\n\nOK = Ersetzen\nAbbrechen = Zusammenführen'
+      // Erst bereinigen, dann zusammenführen — sonst laufen kaputte
+      // Datensätze durch den Merge und landen ungeprüft im Rendering.
+      const sauber = migrateEntries(eintraege);
+      if (sauber.length === 0) { alert('Keine verwertbaren Einträge in der Datei.'); return; }
+
+      const ersetzen = window.confirm(
+        sauber.length + ' Einträge gefunden.\n\nVorhandene Daten ersetzen oder zusammenführen?\n\nOK = Ersetzen\nAbbrechen = Zusammenführen'
       );
 
-      if (confirm) {
-        sessions = eintraege;
+      if (ersetzen) {
+        sessions = sauber;
       } else {
         // Merge: bestehende IDs nicht doppelt
         const existingIds = new Set(sessions.map(s => s.id));
-        const neu = eintraege.filter(s => !existingIds.has(s.id));
+        const neu = sauber.filter(s => !existingIds.has(s.id));
         sessions = [...sessions, ...neu].sort((a, b) => b.id - a.id);
       }
 
-      migrateEntries(sessions);
       save();
       renderAll();
-      showToast(eintraege.length + ' Einträge geladen ✓');
+      const verworfen = eintraege.length - sauber.length;
+      showToast(sauber.length + ' Einträge geladen ✓' + (verworfen > 0 ? ` (${verworfen} verworfen)` : ''));
     } catch(err) {
       alert('Fehler beim Laden: Ungültige JSON-Datei');
     }
@@ -612,25 +664,47 @@ function importFromFile(event) {
 
 // ─── CSV Export ───────────────────────────────────────────
 
+// Deutsches CSV-Format: Semikolon als Trenner, Komma als Dezimalzeichen.
+// Sonst zerlegt Excel/Numbers mit DE-Regionaleinstellung die Datei falsch —
+// und die CSV geht an den Vermieter.
+function csvNum(n, digits) { return n.toFixed(digits).replace('.', ','); }
+function csvCell(v) { return `"${String(v).replace(/"/g, '""')}"`; }
+
 function exportCSV() {
   if (sessions.length === 0) { showToast('Keine Daten'); return; }
   const totalKwh = sessions.reduce((a, s) => a + s.kwh, 0);
   const totalCost = sessions.reduce((a, s) => a + s.kwh * s.price, 0);
-  let csv = 'Datum,Beschreibung,Details,kWh,Preis EUR/kWh,Kosten EUR\n';
-  sessions.forEach(s => { csv += `${s.date},"${s.label}","${s.meta}",${s.kwh.toFixed(3)},${s.price.toFixed(3)},${(s.kwh * s.price).toFixed(2)}\n`; });
-  csv += `\nGesamt,,,${totalKwh.toFixed(3)},,${totalCost.toFixed(2)}\n`;
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-  if (navigator.share) {
-    const file = new File([blob], 'ladetagebuch.csv', { type: 'text/csv' });
-    navigator.share({ files: [file] }).catch(() => triggerDownload(blob, 'ladetagebuch.csv'));
-  } else {
-    triggerDownload(blob, 'ladetagebuch.csv');
-  }
+  let csv = 'Datum;Beschreibung;Details;kWh;Preis EUR/kWh;Kosten EUR\n';
+  sessions.forEach(s => {
+    csv += [
+      s.date, csvCell(s.label), csvCell(s.meta),
+      csvNum(s.kwh, 3), csvNum(s.price, 3), csvNum(s.kwh * s.price, 2)
+    ].join(';') + '\n';
+  });
+  csv += `\nGesamt;;;${csvNum(totalKwh, 3)};;${csvNum(totalCost, 2)}\n`;
+  // BOM, damit Excel die Umlaute als UTF-8 erkennt
+  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+  shareOrDownload(blob, 'ladetagebuch.csv', 'text/csv', 'CSV gespeichert ✓');
 }
 
 // ─── Helpers ──────────────────────────────────────────────
 
 function today() { return new Date().toISOString().split('T')[0]; }
+
+function esc(v) {
+  return String(v == null ? '' : v)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+// Date.now() kollidiert, wenn zwei Einträge in derselben Millisekunde
+// entstehen (Merge-Import dedupliziert ausschließlich über die id).
+let lastId = 0;
+function nextId() {
+  const t = Date.now();
+  lastId = t > lastId ? t : lastId + 1;
+  return lastId;
+}
 
 let toastTimer;
 function showToast(msg) {
@@ -647,7 +721,16 @@ function checkInstallBanner() {
   }
 }
 
-load(); loadPrice(); renderAll();
+// Init defensiv: ein Fehler beim Laden darf nicht dazu führen, dass der Rest
+// (Datums-Default, Service-Worker-Registrierung) nie ausgeführt wird.
+try { load(); } catch(e) { sessions = []; }
+loadPrice();
+
+const slider = document.getElementById('loss-slider');
+slider.min = LOSS_MIN; slider.max = LOSS_MAX; slider.value = DEFAULT_LOSS;
+document.getElementById('loss-display').textContent = DEFAULT_LOSS + '%';
+
+renderAll();
 document.getElementById('input-date').value = today();
 document.getElementById('price-input').value = currentPrice.toFixed(3);
 checkInstallBanner();
