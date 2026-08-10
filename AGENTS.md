@@ -362,7 +362,11 @@ Wenn sich danach Asset-Inhalte geändert haben, **`CACHE_VERSION` in
 
 ## Lizenzen
 
-- **App-Code**: MIT, siehe `LICENSE` (Copyright Marco Bruch).
+- **App-Code**: MIT, siehe `LICENSE` (Copyright Marco Bruch). Die Datei
+  enthält bewusst **nur** den reinen MIT-Text — jeder Zusatz lässt GitHubs
+  Erkennung (Licensee) auf "Other" zurückfallen statt "MIT" anzuzeigen.
+  Ausnahmen und Fremdlizenzen gehören deshalb hierher und in die README,
+  nicht in `LICENSE`.
 - **Schriften in `fonts/`**: SIL Open Font License 1.1, siehe
   `fonts/LICENSE`. Die Datei enthält die unveränderten Originaltexte von
   Syne und DM Mono, geholt aus `google/fonts` (`ofl/syne/OFL.txt` bzw.
