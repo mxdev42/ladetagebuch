@@ -136,6 +136,20 @@ Kalibriergrundlage entfernt statt geraten. Falls sie in einem alten Stand
 oder in der Git-Historie auftaucht: bewusste Entscheidung, nicht
 versehentlich verloren.
 
+**Werkstattaufenthalt 2026:** Am Fahrzeug wird die E-Maschine getauscht
+(sporadischer Fehler im Temperatursensor der Statorwicklung). Zwei Dinge
+dazu, falls die Historie um diesen Zeitraum herum seltsam aussieht:
+
+- Der Tausch verändert den **Ladeverlust nicht**. Beim AC-Laden mit
+  2,2 kW ist die E-Maschine stromlos; der Verlust entsteht im
+  Onboard-Charger und im Akku. Messungen vor und nach dem Tausch bleiben
+  vergleichbar, die Kalibriergrundlage oben gilt weiter.
+- Über den Werkstattaufenthalt fehlen Einträge, und ein SOC-Sprung ohne
+  zugehörige Ladung ist möglich (die Werkstatt lädt auf eigene Rechnung).
+  Solche kWh gehören **nicht** in die Vermieter-Abrechnung. Der erste
+  Ladevorgang danach wird deshalb über den Zähler erfasst, nicht über
+  SOC geschätzt.
+
 Formel zur kWh-Berechnung aus SOC-Differenz:
 
 ```
