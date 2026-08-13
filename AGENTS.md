@@ -9,11 +9,16 @@ dokumentiert werden.
 > `CLAUDE.md` ist ein Symlink hierauf.
 
 **Setup:** Mode-2-Kabel an Schuko (keine Wallbox). Zwischen Wanddose und
-Verlängerungskabel sitzt ein Energiezähler (NOVKIT JK-PM04) — sein
-Display ist die Quelle der Wahrheit für die Abrechnung. Der
-**"kWh direkt"-Modus** der App ist dafür da, diesen abgelesenen Wert
-einzutragen. Der **SOC-Modus** ist nur Backup, wenn der Zähler nicht
-abgelesen wurde — er rechnet aus Akku-SOC × Kapazität / (1 − Verlust).
+Verlängerungskabel sitzt ein Energiezähler — sein Wert ist die Quelle der
+Wahrheit für die Abrechnung. Der **"kWh direkt"-Modus** der App ist dafür
+da, diesen abgelesenen Wert einzutragen. Der **SOC-Modus** ist nur Backup,
+wenn der Zähler nicht abgelesen wurde — er rechnet aus Akku-SOC ×
+Kapazität / (1 − Verlust).
+
+Als Zähler dient seit August 2026 eine **FRITZ!DECT 210** (Schaltsteckdose
+mit Verbrauchsmessung, per DECT an der FRITZ!Box abgelesen). Davor war es
+ein **NOVKIT JK-PM04** mit lokalem Display — alle unten aufgeführten
+Verlust-Messungen stammen noch von diesem Gerät.
 
 ## Architektur
 
@@ -157,7 +162,7 @@ Es gibt zwei Eintrags-Typen, unterschieden durch das Feld `socStart`:
 }
 ```
 
-**kWh-Direkt-Eintrag** — `kwh` ist Source of Truth (vom NOVKIT abgelesen):
+**kWh-Direkt-Eintrag** — `kwh` ist Source of Truth (vom Zähler abgelesen):
 
 ```js
 {
@@ -240,8 +245,8 @@ Aus `loss` und `price` werden zwei Werte pro Eintrag abgeleitet:
 
 ## Arbeitsweise mit dem Nutzer
 
-Marco arbeitet empirisch: er misst real (z. B. mit dem NOVKIT-Zähler an
-der Schuko-Steckdose) und kalibriert Code-Konstanten anhand der
+Marco arbeitet empirisch: er misst real (mit dem Zähler an der
+Schuko-Steckdose) und kalibriert Code-Konstanten anhand der
 Messwerte — siehe Verlust-Wert, der aus eigener Messung abgeleitet ist
 und keine Schätzung aus dem Datenblatt. Wenn Marco
 "kann es sein dass …" oder eine ähnlich beobachtende Frage stellt,
