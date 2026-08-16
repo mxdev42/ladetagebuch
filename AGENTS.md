@@ -112,7 +112,7 @@ Frühere Mehrstufen-Logik (`LOSS_BY_A` für 10/8/6 A) wurde entfernt, weil
 nur eine Stufe genutzt wird.
 
 16 % entspricht dem gewichteten Mittelwert der Messungen (nach
-Brutto-kWh **15,83 %** über 59,2 kWh, Streuung 14,9–16,9 %). Muster in
+Brutto-kWh **15,74 %** über 64,5 kWh, Streuung 14,9–16,9 %). Muster in
 den Messungen: Charges, die bei ≤80 % SOC enden und einteilig sind
 (reine CC-Phase), liegen gewichtet bei **15,0 %** Verlust; Charges, die
 bis 100 % gehen (CV-Phase oberhalb ~80 % reduziert den Strom), bzw.
@@ -124,6 +124,7 @@ Messungen (Verlust = 1 − NET_KWH · ΔSOC/100 / Brutto-kWh):
 - 2026-05-26: 3,94 kWh für 63→80 % SOC → 15,0 % Verlust (saubere Einzelmessung bei ~2,2 kW)
 - 2026-05-26: 9,932 kWh für 58→100 % SOC → 16,7 % Verlust (erste Messung bis 100 %; CV-Phase oberhalb ~80 % reduziert Strom → höherer Relativverlust)
 - 2026-05-26: 15,56 kWh für 13→80 % SOC → 15,2 % Verlust (saubere Einzelmessung, reine CC-Phase bei ~2,2 kW)
+- 2026-08-16: 5,321 kWh für 57→80 % SOC → 14,9 % Verlust (erste Messung mit der FRITZ!DECT 210 — deckt sich mit den NOVKIT-Werten, also kein Zähler-Versatz durch den Gerätewechsel)
 
 **Zurückgezogen — nicht wieder aufnehmen:** Eine Messung vom 2026-05-16
 stand hier als "3,591 kWh für 64→80 % SOC → 17,7 % Verlust (gemischt
